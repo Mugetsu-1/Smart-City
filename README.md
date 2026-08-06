@@ -1,64 +1,58 @@
-# Kathmandu Transit Optimization & Dispatch System
+# Smart City: Dynamic Transit Scheduling and Route Optimization in Nepal
 
-An end-to-end data engineering and predictive machine learning pipeline that transforms raw transit telemetry (passenger tap-in/tap-out logs) and environmental context (weather, temporal patterns) into real-time, actionable schedule and route optimizations for Kathmandu Valley.
+An enterprise-grade data science, geospatial engineering, and machine learning system that transforms static urban transit timetables into an adaptive dynamic dispatch network for the Kathmandu Valley, Nepal.
 
-## Project Structure
+## The Core Problem
+Public transit buses in growing metropolitan areas like the Kathmandu Valley are dangerously overcrowded during peak commute hours, yet run completely empty off-peak, wasting fuel, escalating operational costs, and causing severe driver burnout.
+
+## The Solution
+This project ingests transit telemetry, forecasts passenger demand 1 to 24 hours in advance using XGBoost, identifies spatial congestion hotspots via K-Means clustering, and automatically issues real-time fleet dispatch instructions to transit authorities.
+
+## Repository Structure
 
 ```
-d:/smart_city_transit/
-├── docker-compose.yml       # Docker Compose for PostgreSQL 15 & PostGIS database
-├── requirements.txt         # Python project dependencies
-├── README.md                # Project documentation
-├── system_architecture.md   # System Architecture & Design Document
-├── project_description.md   # Detailed Project Purpose & Data Overview
-├── run.py                   # Master script to run schema, generate/ingest data, & train model
+smart_city_transit/
+├── docker-compose.yml       # PostgreSQL 15 & PostGIS database stack definition
+├── requirements.txt         # Project Python dependencies
+├── README.md                # Project documentation and quickstart guide
+├── system_architecture.md   # Architectural design document
+├── project_description.md   # Project purpose, data overview, and stakeholder benefits
+├── run.py                   # Master execution script for complete pipeline
 ├── sql/
-│   └── schema.sql           # Database schema & materialized view definitions
+│   └── schema.sql           # PostGIS schema, indexes, and materialized view definitions
 ├── src/
-│   ├── generate_data.py     # Generates Kathmandu synthetic data and handles PostgreSQL ingestion
-│   ├── train_model.py       # Feature engineering & XGBoost model training/evaluation
-│   └── optimize.py          # Occupancy calculations & headway optimization recommendations
+│   ├── generate_data.py     # Kathmandu synthetic dataset generator and DB ingestor
+│   ├── train_model.py       # Nepal feature engineering and XGBoost training pipeline
+│   ├── optimize.py          # Occupancy calculations, K-Means clustering, and dispatch rules
+│   └── test_optimize.py     # Optimization engine verification test script
 └── app/
     └── app.py               # Streamlit Command Center Interactive Dashboard
 ```
 
 ## Key Kathmandu Corridors Covered
 - **Ring Road Corridor**: Gongabu, Maharajgunj, Chabahil, Gaushala, Koteshwor, Satdobato, Balkhu, Kalanki, Swayambhu, Balaju
-- **Ratna Park - Lagankhel Corridor**: Ratna Park, Maitighar, Thapathali, Kupondole, Pulchowk, Jawalakhel, Lagankhel
-- **Arniko Highway Corridor**: New Baneshwor, Tinkune, Jadibuti, Lokanthali, Kaushaltar, Gatapatha, Suryabinayak
+- **Ratna Park - Lagankhel Corridor**: Ratna Park, Lainchaur, Maitighar, Thapathali, Kupondole, Pulchowk, Jawalakhel, Lagankhel
+- **Arniko Highway Corridor**: New Baneshwor, Tinkune, Jadibuti, Lokanthali, Kaushaltar, Gatthaghar, Suryabinayak
 - **Tribhuvan Rajpath Corridor**: Kalanki Central, Gurjudhara, Thankot, Nagdhunga
+- **Chabahil - Jorpati Corridor**: Jorpati Chowk
 
-## System Requirements
+## Quickstart Guide
 
-- **Operating System:** Windows, Linux, or macOS
-- **Docker & Docker Compose** (for running the PostgreSQL + PostGIS database)
-- **Python 3.10+**
-
-## Getting Started
-
-### 1. Start the Database
-The project utilizes a Dockerized PostgreSQL database with the PostGIS extension. Spin up the container:
+### 1. Environment Setup
+Install required Python dependencies:
 ```bash
-docker compose up -d
-```
-
-### 2. Set Up Virtual Environment & Install Dependencies
-Create a virtual environment and install the required libraries:
-```bash
-python -m venv .venv
 .venv\Scripts\pip.exe install -r requirements.txt
 ```
 
-### 3. Initialize Schema, Ingest Data & Train Model
-Run the pipeline script to set up tables, populate them with Kathmandu synthetic data, and train the XGBoost model:
+### 2. Execute Data Generation & Model Training Pipeline
+Run the master script to generate the synthetic Kathmandu dataset, set up PostgreSQL/PostGIS schema (or CSV fallback), train the XGBoost demand forecasting model, and test the schedule optimization engine:
 ```bash
 .venv\Scripts\python.exe run.py
 ```
 
-### 4. Launch the Dashboard
-Start the interactive Streamlit command center dashboard:
+### 3. Launch the Streamlit Control Center
+Start the interactive command center dashboard:
 ```bash
-.venv\Scripts\python.exe -m streamlit run app/app.py
+.venv\Scripts\streamlit.exe run app/app.py
 ```
-
-Open the local URL displayed in the terminal (`http://localhost:8501`) to interact with the dispatch system.
+Open `http://localhost:8501` in your browser to view the interactive map, KPI metrics, dispatch control table, and forecast trend charts.
