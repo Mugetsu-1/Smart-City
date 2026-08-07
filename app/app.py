@@ -9,16 +9,36 @@ from sqlalchemy import create_engine
 from streamlit_folium import st_folium
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit.components.v1 as components
 
 # Add parent directory to path to import src modules
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from src.optimize import generate_schedule_recommendations
+from src.data_feeds import (
+    load_operational_bundle,
+    load_transit_stops,
+    load_demand_feed,
+    load_weather_snapshot,
+    annotate_demand_source,
+)
 
 DB_CONN = "postgresql://postgres:postgrespassword@localhost:5433/transit_db"
+AUTO_REFRESH_MS = 60000
 
 st.set_page_config(
     layout="wide",
     page_title="Kathmandu Transit Optimization Command Center"
+)
+
+components.html(
+    f"""
+    <script>
+      setTimeout(function() {{
+        window.location.reload();
+      }}, {AUTO_REFRESH_MS});
+    </script>
+    """,
+    height=0,
 )
 
 # Custom CSS for sleek technical dashboard styling
@@ -105,16 +125,23 @@ def load_stops_data(use_db):
                     conn
                 )
             engine.dispose()
+            df['data_source'] = 'database'
             return df
         except Exception as e:
             st.warning(f"Database query fallback notice: {e}")
 
-    return pd.read_csv("data/synthetic_transit_stops.csv")
+    return load_transit_stops()
 
 
 @st.cache_data(ttl=300)
 def load_demand_data(use_db):
-    if use_db:
+    live_feed_paths = [
+        "data/live_operator_demand.csv",
+        "data/live_demand.csv",
+    ]
+    has_live_feed = any(os.path.exists(path) for path in live_feed_paths)
+
+    if use_db and has_live_feed:
         try:
             engine = create_engine(DB_CONN)
             with engine.connect() as conn:
@@ -137,11 +164,12 @@ def load_demand_data(use_db):
                 )
             engine.dispose()
             df['timestamp'] = pd.to_datetime(df['timestamp'])
+            df['data_source'] = 'database'
             return df
         except Exception as e:
             st.warning(f"Database query fallback notice: {e}")
 
-    return pd.read_csv("data/synthetic_transit_demand.csv", parse_dates=['timestamp'])
+    return load_demand_feed()
 
 
 # UI Header
@@ -156,6 +184,8 @@ st.markdown(
 )
 
 is_connected = check_db_connection()
+operational_bundle = load_operational_bundle()
+live_weather = operational_bundle["weather"]
 
 # Sidebar Control Panel
 st.sidebar.header("System Controls")
@@ -175,8 +205,22 @@ else:
         unsafe_allow_html=True
     )
 
+st.sidebar.markdown(
+    f"Live Mode: <span class='status-connected'>Refreshing every {AUTO_REFRESH_MS // 1000} seconds</span>",
+    unsafe_allow_html=True
+)
+
 stops_df  = load_stops_data(is_connected)
 demand_df = load_demand_data(is_connected)
+
+modeled_stops_df = pd.read_csv("data/synthetic_transit_stops.csv")
+modeled_demand_df = pd.read_csv("data/synthetic_transit_demand.csv", parse_dates=['timestamp'])
+live_demand_present = os.path.exists("data/live_operator_demand.csv") or os.path.exists("data/live_demand.csv")
+
+feed_overlap = set(stops_df['stop_id']).intersection(set(demand_df['stop_id'])) if len(stops_df) > 0 and len(demand_df) > 0 else set()
+if len(feed_overlap) == 0 or not live_demand_present:
+    stops_df = modeled_stops_df
+    demand_df = annotate_demand_source(modeled_demand_df, "modeled_history")
 
 available_routes = ["All Corridors"] + list(stops_df['route_id'].unique())
 selected_route   = st.sidebar.selectbox("Filter Transit Corridor", available_routes)
@@ -196,20 +240,12 @@ if os.path.exists(model_path) and os.path.exists(feature_cols_path):
         st.sidebar.warning(f"Model load warning: {e}")
 
 
-# Always build XGBoost features from the full CSV dataset.
-# The DB demand_df (tap-event aggregates, max 5 per stop per hour from a 10%
-# sample) is too sparse: at any given latest_timestamp only a handful of stops
-# have records, so lag features are NaN for the rest and the model cannot
-# produce predictions for non-Arniko corridors.
-# The CSV contains the complete 43,200-row synthetic demand series for all stops.
+# Build XGBoost features from the best available demand feed.
 CSV_DEMAND_PATH = "data/synthetic_transit_demand.csv"
 
 if model_loaded:
     try:
-        if os.path.exists(CSV_DEMAND_PATH):
-            feat_src = pd.read_csv(CSV_DEMAND_PATH, parse_dates=['timestamp'])
-        else:
-            feat_src = demand_df
+        feat_src = demand_df.copy()
         feat_latest_ts = feat_src['timestamp'].max()
         target_time    = feat_latest_ts + pd.Timedelta(hours=time_window)
 
@@ -268,14 +304,11 @@ if model_loaded:
 
 
 if not model_loaded:
-    # Use CSV for the fallback path — guarantees all 30 stops are present.
-    csv_demand_path = "data/synthetic_transit_demand.csv"
-    if os.path.exists(csv_demand_path):
-        csv_demand = pd.read_csv(csv_demand_path, parse_dates=['timestamp'])
-    else:
-        csv_demand = demand_df
-    csv_latest_ts = csv_demand['timestamp'].max()
-    latest_data = csv_demand[csv_demand['timestamp'] == csv_latest_ts].copy()
+    latest_ts = demand_df['timestamp'].max()
+    latest_data = demand_df[demand_df['timestamp'] == latest_ts].copy()
+    if len(latest_data) == 0 and len(modeled_demand_df) > 0:
+        latest_ts = modeled_demand_df['timestamp'].max()
+        latest_data = modeled_demand_df[modeled_demand_df['timestamp'] == latest_ts].copy()
     np.random.seed(42 + time_window)
     latest_data['predicted_demand'] = (
         latest_data['demand'] * np.random.uniform(0.95, 1.15, size=len(latest_data))
@@ -314,6 +347,22 @@ with col4:
     st.metric("Underutilized Stops", f"{underutilized}")
 
 st.write("---")
+
+st.subheader("Live Operational Snapshot")
+live_cols = st.columns(2)
+demand_source = (
+    demand_df['data_source'].iloc[0]
+    if len(demand_df) > 0 and 'data_source' in demand_df.columns
+    else "unknown"
+)
+with live_cols[0]:
+    st.markdown("**Snapshot Time (UTC)**  \n" + pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d %H:%M"))
+with live_cols[1]:
+    st.markdown(f"**Demand Feed**  \n{demand_source}")
+st.caption(
+    "This dashboard refreshes automatically. Real Kathmandu transit geometry comes from Yatayat/OpenStreetMap "
+    "and demand forecasting uses the best available modeled history until a live operator passenger feed is connected."
+)
 
 st.subheader("Corridor Dispatch Priorities")
 if len(df_rec) > 0 and {'corridor_action', 'corridor_peak_occupancy', 'corridor_recommended_buses'}.issubset(df_rec.columns):

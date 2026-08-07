@@ -8,6 +8,14 @@ def generate_schedule_recommendations(df_stops, df_predictions, capacity_per_bus
     and generates automated dispatch recommendations for Nepal transit authorities.
     """
     merged = df_predictions.merge(df_stops, on='stop_id', how='inner')
+    if merged.empty:
+        empty_rec = pd.DataFrame(columns=[
+            'stop_id', 'stop_name', 'route_id', 'predicted_demand', 'occupancy_ratio',
+            'effective_capacity', 'recommended_additional_buses', 'recommended_headway_change_min',
+            'action_recommended', 'alert_level', 'latitude', 'longitude'
+        ])
+        empty_hotspots = pd.DataFrame(columns=list(empty_rec.columns) + ['hotspot_cluster'])
+        return empty_rec, empty_hotspots
     merged['predicted_demand'] = pd.to_numeric(merged['predicted_demand'], errors='coerce').fillna(0)
     if 'capacity_limit' in merged.columns:
         merged['effective_capacity'] = pd.to_numeric(merged['capacity_limit'], errors='coerce').fillna(capacity_per_bus)
