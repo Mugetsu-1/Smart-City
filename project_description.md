@@ -6,12 +6,17 @@ Public transit networks in rapidly growing urban centers like the Kathmandu Vall
 Traditional public transit systems rely on rigid, fixed bus timetables published months in advance that cannot adapt to real-time fluctuations, extreme weather events like monsoon rains, or sudden demand spikes during festival seasons (such as Dashain and Tihar).
 
 ## 2. The Core Objective
-This project builds an enterprise-grade, data-driven dynamic dispatch system titled **"Smart City: Dynamic Transit Scheduling and Route Optimization in Nepal"**. The system replaces static timetables with an adaptive intelligent network that forecasts passenger demand 1 to 24 hours in advance and automatically recommends real-time fleet adjustments.
+This project builds an enterprise-grade, data-driven dynamic dispatch system titled **"Smart City: Dynamic Transit Scheduling and Route Optimization in Nepal"**. The system replaces static timetables with an adaptive intelligent network that forecasts passenger demand 1 to 24 hours in advance and automatically recommends fleet adjustments in near real time.
+
+The implementation is currently a **hybrid real-time system**:
+- Real Kathmandu transit network geometry comes from the Yatayat/OpenStreetMap export.
+- Live Kathmandu weather is pulled from the Department of Hydrology and Meteorology.
+- Passenger demand is still forecast from the best available modeled historical layer until a live operator telemetry feed is available.
 
 ## 3. How the System Solves the Problem
 
 1. **Ingest Telemetry (Data Engineering)**:
-   Collects live and historical data—including passenger tap card swipes, bus GPS coordinates, vehicle occupancy, and weather metrics—and structures it using PostgreSQL and PostGIS with GIST spatial indexing and materialized view aggregations (`mv_hourly_stop_demand`).
+   Collects real transit-network data, live weather snapshots, and historical demand features, then structures them using PostgreSQL and PostGIS with GIST spatial indexing and materialized view aggregations (`mv_hourly_stop_demand`).
 
 2. **Forecast Demand (Machine Learning)**:
    Employs an XGBoost regression model trained on temporal encodings, Nepal calendar features (Saturday weekend structure, Dashain/Tihar festival surges), monsoon precipitation indicators (>2.0 mm/hr), and multi-horizon time-series lags (1h, 24h, 168h, rolling means) to forecast hourly passenger volume per stop.
@@ -23,7 +28,7 @@ This project builds an enterprise-grade, data-driven dynamic dispatch system tit
    Calculates vehicle occupancy ratios against Nepal transit vehicle bounds (15-20 microbus vs 40-60 Sajha Yatayat bus) and outputs automated dispatch instructions (e.g., "Critical Overcrowding at Kalanki: Inject 2 short-turn express buses toward Ratna Park and reduce headway by 5 minutes").
 
 5. **Visualize Operations (Dashboard)**:
-   Provides a real-time Streamlit Command Center displaying system health metrics, color-coded Folium spatial heatmaps, sortable dispatch recommendation tables, and Plotly demand trend charts.
+   Provides a near real-time Streamlit Command Center displaying system health metrics, color-coded Folium spatial heatmaps, sortable dispatch recommendation tables, a live operational snapshot, and Plotly demand trend charts.
 
 ## 4. Who Benefits and Why It Matters
 
