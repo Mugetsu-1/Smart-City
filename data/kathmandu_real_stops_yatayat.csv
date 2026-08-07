@@ -1,0 +1,213 @@
+stop_id,stop_name,route_id,latitude,longitude,source
+OSM_31019074,Hyatt Regency,Purano Bus Park - jorpati,27.7194001,85.3541091,Yatayat / OpenStreetMap
+OSM_31019734,Lainchour Chowk Bus Stop,Kathmandu Transit,27.7170479,85.3160463,Yatayat / OpenStreetMap
+OSM_31147572,Airport Bus Station,Chakrapath Parikrama,27.7007282,85.3536657,Yatayat / OpenStreetMap
+OSM_31148719,Dillibazaar stop,Gothatar-Purano Buspark,27.7053698,85.3267594,Yatayat / OpenStreetMap
+OSM_31148727,Putalisadak chowk,Ratna Park - Sundarijal,27.7056942,85.3228482,Yatayat / OpenStreetMap
+OSM_31150618,KMC stop,Gothatar-Purano Buspark,27.6958336,85.3527914,Yatayat / OpenStreetMap
+OSM_31150627,Sinamangal,Gothatar-Purano Buspark,27.6984315,85.3485208,Yatayat / OpenStreetMap
+OSM_31150643,Old Baneshwor,Gothatar-Purano Buspark,27.7015201,85.3402035,Yatayat / OpenStreetMap
+OSM_31150664,Sinamangal/Ring Road Stop सिनामंगल,Chakrapath Parikrama,27.6952641,85.3550236,Yatayat / OpenStreetMap
+OSM_31151483,Chabahil चाबाहील,Ratna Park - Sundarijal,27.7166411,85.3463953,Yatayat / OpenStreetMap
+OSM_31152086,Samakhusi Stop,Kathmandu Transit,27.7356178,85.3208814,Yatayat / OpenStreetMap
+OSM_31228768,Koteshwor Stop,Chakrapath Parikrama,27.6789154,85.3495276,Yatayat / OpenStreetMap
+OSM_31229796,Kamal Binayak,Kamalbinayak-Ratnapark,27.6773274,85.4369166,Yatayat / OpenStreetMap
+OSM_31230058,Chunudevi,Kathmandu Transit,27.6670973,85.4167103,Yatayat / OpenStreetMap
+OSM_31230194,Chyamasingh,Chyamasingh to Ratnapark,27.6734269,85.4383679,Yatayat / OpenStreetMap
+OSM_31230922,Gairigaun Stop,Chakrapath Parikrama,27.6872755,85.3505597,Yatayat / OpenStreetMap
+OSM_31232256,Bir Hospital,Purano Bus Park- Patan Dhoka,27.7057227,85.3140743,Yatayat / OpenStreetMap
+OSM_31303568,Balaju,Kathmandu Transit,27.727061,85.3046132,Yatayat / OpenStreetMap
+OSM_36470985,Thankot,Kathmandu Transit,27.7066268,85.20574,Yatayat / OpenStreetMap
+OSM_253198544,attarkhel,Attrekhle-Purano Buspark,27.7345484,85.3824524,Yatayat / OpenStreetMap
+OSM_253205163,Mangalbazar,Kathmandu Transit,27.6726408,85.32499,Yatayat / OpenStreetMap
+OSM_268116939,Sorhakhutte,Kathmandu Transit,27.7189672,85.3096191,Yatayat / OpenStreetMap
+OSM_268117053,Balaju Chowk Bus Stop,Kathmandu Transit,27.7261654,85.3049748,Yatayat / OpenStreetMap
+OSM_268307740,Gairidhara,Purano Bus Park- Patan Dhoka,27.717774,85.3278923,Yatayat / OpenStreetMap
+OSM_268307757,Tangal,Purano Bus Park- Patan Dhoka,27.7172017,85.3304487,Yatayat / OpenStreetMap
+OSM_268307761,Police Headquarter Stop,Kathmandu Transit,27.7166335,85.3302144,Yatayat / OpenStreetMap
+OSM_268307973,Batuk Bhairav,Kathmandu Transit,27.6644749,85.3240029,Yatayat / OpenStreetMap
+OSM_268545728,Shobhabhagwati,Kathmandu Transit,27.7182038,85.3121379,Yatayat / OpenStreetMap
+OSM_296340520,Dhulikhel Stop,Ratnapark - Dhulikhel,27.6184151,85.5540152,Yatayat / OpenStreetMap
+OSM_313140515,Naxal Bhagwati,Purano Bus Park- Patan Dhoka,27.7126983,85.3286914,Yatayat / OpenStreetMap
+OSM_313544725,Kalanki,Chakrapath Parikrama,27.6933793,85.2817107,Yatayat / OpenStreetMap
+OSM_313917671,Jamal,Kathmandu Transit,27.708829,85.315292,Yatayat / OpenStreetMap
+OSM_314528404,Kalimati,Naikap-Koteshwor,27.6984303,85.2994397,Yatayat / OpenStreetMap
+OSM_317532028,Thapathali,Purano Bus Park- Patan Dhoka,27.6917733,85.3180108,Yatayat / OpenStreetMap
+OSM_317532042,UN Stop,Kathmandu Transit,27.6781007,85.3163695,Yatayat / OpenStreetMap
+OSM_336240765,Chobhar Gate,Kathmandu Transit,27.6704494,85.2906221,Yatayat / OpenStreetMap
+OSM_356102511,Nikap,Kausaltar-Naikap,27.6860909,85.2622904,Yatayat / OpenStreetMap
+OSM_356102517,Sataungal,Kathmandu Transit,27.6869877,85.2506003,Yatayat / OpenStreetMap
+OSM_356102531,Thankot Checkpost,Kathmandu Transit,27.6890018,85.2272286,Yatayat / OpenStreetMap
+OSM_360265094,Chapgaun,Kathmandu Transit,27.5929413,85.3244031,Yatayat / OpenStreetMap
+OSM_360309100,Gwarko Chowk Stop,Kathmandu Transit,27.6668183,85.3319371,Yatayat / OpenStreetMap
+OSM_360455521,Lalitpur Industrial Estate,Kathmandu Transit,27.6673117,85.3222558,Yatayat / OpenStreetMap
+OSM_360455539,Lagankhel Stop,"Naya Baneshwor, Koteshwor, Satdobato, Lagankhel, Jaulakhel, Kupandol, Naya Baneshwor",27.667053,85.3225628,Yatayat / OpenStreetMap
+OSM_360464983,Khasibazaar,Chakrapath Parikrama,27.6893141,85.2841807,Yatayat / OpenStreetMap
+OSM_360695713,Apex College Stop,Kathmandu Transit,27.6990701,85.3383269,Yatayat / OpenStreetMap
+OSM_360695719,SchEMS,Kathmandu Transit,27.6943342,85.3371545,Yatayat / OpenStreetMap
+OSM_360702826,saat tale chowk,Kathmandu Transit,27.7269595,85.350484,Yatayat / OpenStreetMap
+OSM_360705527,Jorpati,Ratna Park - Sundarijal,27.7217627,85.3726321,Yatayat / OpenStreetMap
+OSM_360728723,Gokarna Bus Stop,Kathmandu Transit,27.7403061,85.3907196,Yatayat / OpenStreetMap
+OSM_360732075,Sundarijal,Ratna Park - Sundarijal,27.7575653,85.4193939,Yatayat / OpenStreetMap
+OSM_360743086,Shivapuri Park Stop,Kathmandu Transit,27.7910669,85.3704099,Yatayat / OpenStreetMap
+OSM_360889656,Thimi,Ratnapark-Dadhikot,27.673232,85.3854248,Yatayat / OpenStreetMap
+OSM_415553223,Singha Durbar East Stop,Balkumari-Gopi Krishna,27.6966083,85.3281501,Yatayat / OpenStreetMap
+OSM_425227547,Mahapal,Kathmandu Transit,27.6735497,85.3238901,Yatayat / OpenStreetMap
+OSM_425227584,Gahabahal,Kathmandu Transit,27.674297,85.3210465,Yatayat / OpenStreetMap
+OSM_425256487,Natole,Kathmandu Transit,27.6760652,85.3182015,Yatayat / OpenStreetMap
+OSM_425307054,Jawalakhel,"Naya Baneshwor, Koteshwor, Satdobato, Lagankhel, Jaulakhel, Kupandol, Naya Baneshwor",27.6731745,85.3135275,Yatayat / OpenStreetMap
+OSM_434978493,Patan Dhoka,Purano Bus Park- Patan Dhoka,27.6797052,85.3204857,Yatayat / OpenStreetMap
+OSM_457278653,Adarsha,Kathmandu Transit,27.6664631,85.4330927,Yatayat / OpenStreetMap
+OSM_558555620,Panauti,Panauti - Ratnapark,27.5871361,85.5133345,Yatayat / OpenStreetMap
+OSM_558555688,Banepa,Kathmandu Transit,27.6300471,85.523985,Yatayat / OpenStreetMap
+OSM_558561818,Pepsi Cola Chowk,Bhaktapur-Purano Thimi- Purano Bus Park,27.6892092,85.3603535,Yatayat / OpenStreetMap
+OSM_558561819,Lainchaur stop,Kathmandu Transit,27.7187572,85.3176972,Yatayat / OpenStreetMap
+OSM_560500317,Boudha,Ratna Park - Sundarijal,27.7207198,85.3617598,Yatayat / OpenStreetMap
+OSM_564118342,Balkhu,Ratna Park - Daksinkali,27.6849952,85.2982204,Yatayat / OpenStreetMap
+OSM_577479838,Sakhu Stop,Purano Bus Park - Sakhu,27.7276836,85.4616684,Yatayat / OpenStreetMap
+OSM_670651214,Kupondole stop,"Naya Baneshwor, Koteshwor, Satdobato, Lagankhel, Jaulakhel, Kupandol, Naya Baneshwor",27.6879741,85.3163053,Yatayat / OpenStreetMap
+OSM_725879816,Jwagal,Purano Bus Park- Patan Dhoka,27.6855629,85.3181634,Yatayat / OpenStreetMap
+OSM_728152923,Naya Naikap,Naikap-Koteshwor,27.7012827,85.2891812,Yatayat / OpenStreetMap
+OSM_728153897,ASCOL Stop,Kathmandu Transit,27.7173801,85.3148107,Yatayat / OpenStreetMap
+OSM_913398284,TU Gate,Kathmandu Transit,27.6788796,85.2972123,Yatayat / OpenStreetMap
+OSM_913398317,Panga Dobato,Kathmandu Transit,27.6747581,85.2804077,Yatayat / OpenStreetMap
+OSM_913398439,Tinkune,Kathmandu Transit,27.676654,85.2835434,Yatayat / OpenStreetMap
+OSM_913493802,Dhokashi,Kathmandu Transit,27.670661,85.2790338,Yatayat / OpenStreetMap
+OSM_943246313,Ratna Park,Kathmandu Transit,27.7067052,85.3152489,Yatayat / OpenStreetMap
+OSM_977632829,BishnuDevi Health Centre,Kathmandu Transit,27.680562,85.2764393,Yatayat / OpenStreetMap
+OSM_977642700,Shahid Gate,Kathmandu Transit,27.6997186,85.3147572,Yatayat / OpenStreetMap
+OSM_1124397505,Nagaon Dobato,Kathmandu Transit,27.6747945,85.2777568,Yatayat / OpenStreetMap
+OSM_1273357490,Kamaladi Road (कमलादी) stop,Kathmandu Transit,27.7079971,85.3212825,Yatayat / OpenStreetMap
+OSM_1273375058,Babarmahal,Kathmandu Transit,27.6925789,85.3239053,Yatayat / OpenStreetMap
+OSM_1273477941,Lagankhel,Kalanki- Lagankhel,27.6624613,85.3239461,Yatayat / OpenStreetMap
+OSM_1273477942,Kumaripati,Kathmandu Transit,27.6708396,85.3200979,Yatayat / OpenStreetMap
+OSM_1273478102,Patan Hospital,Kathmandu Transit,27.6684893,85.3216418,Yatayat / OpenStreetMap
+OSM_1273478273,MAV School,Kathmandu Transit,27.6570679,85.3262883,Yatayat / OpenStreetMap
+OSM_1274038133,Maitidevi Temple stop,Kathmandu Transit,27.7064123,85.3337332,Yatayat / OpenStreetMap
+OSM_1274184084,Purano Bus Park,Ratna Park - Sundarijal,27.7037097,85.3164292,Yatayat / OpenStreetMap
+OSM_1278025470,Basundhara,Chakrapath Parikrama,27.7406158,85.3293507,Yatayat / OpenStreetMap
+OSM_1278980875,Damkal,Kathmandu Transit,27.6757962,85.3157473,Yatayat / OpenStreetMap
+OSM_1279198122,Krishna Pauroti Stop,Ratna Park - Sundarijal,27.7103689,85.322281,Yatayat / OpenStreetMap
+OSM_1279198216,Bal Mandir,Purano Bus Park- Patan Dhoka,27.7144861,85.3294256,Yatayat / OpenStreetMap
+OSM_1281218812,Maiti Devi chowk,Gothatar-Purano Buspark,27.7039436,85.3326817,Yatayat / OpenStreetMap
+OSM_1281218814,Ratopul,Ratna Park - Sundarijal,27.7081167,85.3364277,Yatayat / OpenStreetMap
+OSM_1281218920,Ratopul Stop,Kathmandu Transit,27.7081009,85.3374841,Yatayat / OpenStreetMap
+OSM_1281221676,Thapagaun Stop,Balkumari-Gopi Krishna,27.6911328,85.3340314,Yatayat / OpenStreetMap
+OSM_1281221704,Ratna Rajya Stop,Kathmandu Transit,27.6956673,85.3376196,Yatayat / OpenStreetMap
+OSM_1317078042,Balkumari Bridge Stop,Balkumari-Gopi Krishna,27.6737617,85.3425079,Yatayat / OpenStreetMap
+OSM_1317084932,Milan Chowk Stop,Kathmandu Transit,27.6951694,85.3406376,Yatayat / OpenStreetMap
+OSM_1317084963,Sangam Chowk Stop,Kathmandu Transit,27.6931956,85.3405019,Yatayat / OpenStreetMap
+OSM_1376180845,Golfutar stop,Kathmandu Transit,27.7514403,85.3459686,Yatayat / OpenStreetMap
+OSM_1382824220,Shantinagar Stop,Kathmandu Transit,27.6871526,85.3408193,Yatayat / OpenStreetMap
+OSM_1394568906,Bhimsengola stop,Gothatar-Purano Buspark,27.7003775,85.3432561,Yatayat / OpenStreetMap
+OSM_1395061503,JayaBageshwari Stop,Purano Bus Park - jorpati,27.7119891,85.3449986,Yatayat / OpenStreetMap
+OSM_1399427366,Tempo Stop Near Old Baneshwar,Kathmandu Transit,27.700669,85.3396774,Yatayat / OpenStreetMap
+OSM_1489359102,Gwarko Chowk Stop,Kathmandu Transit,27.6666661,85.3321608,Yatayat / OpenStreetMap
+OSM_1489359269,B & B Hospital/KCM Stop,Kathmandu Transit,27.6642208,85.3301515,Yatayat / OpenStreetMap
+OSM_1490234323,Ciy Center Stop,Ratna Park - Sundarijal,27.7098189,85.3269842,Yatayat / OpenStreetMap
+OSM_1496605759,Sanepa height,Chakrapath Parikrama,27.6744676,85.3022166,Yatayat / OpenStreetMap
+OSM_1523319418,Gopi Krishna Stop,Balkumari-Gopi Krishna,27.7226748,85.3453352,Yatayat / OpenStreetMap
+OSM_1523358463,Budhanilkantha Stop,Kathmandu Transit,27.7767777,85.3621005,Yatayat / OpenStreetMap
+OSM_1656558864,Changu Narayan,Ratnapark-Changu,27.7163215,85.43078,Yatayat / OpenStreetMap
+OSM_1659430258,Dhungedhara,Chakrapath Parikrama,27.7234101,85.2946749,Yatayat / OpenStreetMap
+OSM_1667090463,Satdobato Chowk Stop,Kalanki- Lagankhel,27.6587797,85.3247842,Yatayat / OpenStreetMap
+OSM_1667091894,Matatirtha Stop,Kathmandu Transit,27.6805772,85.2328579,Yatayat / OpenStreetMap
+OSM_1776714288,Chakrapath Stop-- South,Chakrapath Parikrama,27.7398348,85.336915,Yatayat / OpenStreetMap
+OSM_1776714654,Lazimpat stop,Kathmandu Transit,27.7225227,85.3209237,Yatayat / OpenStreetMap
+OSM_1802350559,Bansbari stop,Kathmandu Transit,27.745758,85.3423734,Yatayat / OpenStreetMap
+OSM_1803547375,Tripureshwor,Kathmandu Transit,27.6943809,85.3141694,Yatayat / OpenStreetMap
+OSM_1805062851,Singha Durbar West Stop,Purano Bus Park- Patan Dhoka,27.6965549,85.3212565,Yatayat / OpenStreetMap
+OSM_1805062970,Bhadrakali,Purano Bus Park - jorpati,27.6993518,85.3177129,Yatayat / OpenStreetMap
+OSM_1805074830,Maitighar,Naikap-Koteshwor,27.693915,85.3209936,Yatayat / OpenStreetMap
+OSM_1805074834,Maitighar,Kathmandu Transit,27.6940159,85.32093,Yatayat / OpenStreetMap
+OSM_1805074877,Singha Durbar West Stop,Kathmandu Transit,27.696626,85.3211991,Yatayat / OpenStreetMap
+OSM_1805087571,Naya Baneshwor Bus Station,Naikap-Koteshwor,27.6885732,85.3347414,Yatayat / OpenStreetMap
+OSM_1805087604,Babarmahal Stop,Purano Bus Park - jorpati,27.6903197,85.328762,Yatayat / OpenStreetMap
+OSM_1806066068,Kantipath,Purano Bus Park- Patan Dhoka,27.7089122,85.3146069,Yatayat / OpenStreetMap
+OSM_1806066069,Ghantaghar (घण्टाघर) stop,Kathmandu Transit,27.7080425,85.3171161,Yatayat / OpenStreetMap
+OSM_1817037493,Tinkune Stop,Balkumari-Gopi Krishna,27.6861178,85.3456043,Yatayat / OpenStreetMap
+OSM_1817037501,Shantinagar Stop,Balkumari-Gopi Krishna,27.6870857,85.3413721,Yatayat / OpenStreetMap
+OSM_1817322707,Maitighar Stop--South,Purano Bus Park- Patan Dhoka,27.694102,85.3193019,Yatayat / OpenStreetMap
+OSM_1822721401,Lokanthali,Kamalbinayak-Ratnapark,27.6747493,85.3599341,Yatayat / OpenStreetMap
+OSM_1823133652,SanoThimi,Bhaktapur-Purano Thimi- Purano Bus Park,27.6826801,85.3723428,Yatayat / OpenStreetMap
+OSM_1824136236,Baakha Bazaar,Bhaktapur-Purano Thimi- Purano Bus Park,27.6828794,85.3858308,Yatayat / OpenStreetMap
+OSM_1826042154,Gyaneshwor Chowk,Kathmandu Transit,27.7086869,85.3318256,Yatayat / OpenStreetMap
+OSM_1826116454,Suryabinayek,Kathmandu Transit,27.6656687,85.4242154,Yatayat / OpenStreetMap
+OSM_1829640344,Saughal,Kathmandu Transit,27.670479,85.3272192,Yatayat / OpenStreetMap
+OSM_1829640347,Tyogal,Kathmandu Transit,27.6686312,85.3298476,Yatayat / OpenStreetMap
+OSM_1830567764,Budhanilkantha Micro Stand,Kathmandu Transit,27.7764591,85.3619335,Yatayat / OpenStreetMap
+OSM_1830567768,Budhanilkantha School Blue Micro Stand,Kathmandu Transit,27.778969,85.3589983,Yatayat / OpenStreetMap
+OSM_1830598346,Deuba Chowk stop,Kathmandu Transit,27.7737563,85.36033,Yatayat / OpenStreetMap
+OSM_1830616461,Sundhara Stop,Purano Bus Park- Patan Dhoka,27.7005417,85.3135033,Yatayat / OpenStreetMap
+OSM_1830679630,Anamnagar Stop,Balkumari-Gopi Krishna,27.6994877,85.3286001,Yatayat / OpenStreetMap
+OSM_1830679633,Bhrikuti Mandap Stop,Kathmandu Transit,27.7021221,85.318738,Yatayat / OpenStreetMap
+OSM_1830679636,Hanumanthan Stop,Balkumari-Gopi Krishna,27.6935216,85.3276028,Yatayat / OpenStreetMap
+OSM_1830679639,Naya Baneshwor Tempo Stop,Balkumari-Gopi Krishna,27.6903727,85.3358296,Yatayat / OpenStreetMap
+OSM_1830679642,Tourism Board Stop,Kathmandu Transit,27.7023323,85.3167996,Yatayat / OpenStreetMap
+OSM_1830679652,New Plaza Stop,Balkumari-Gopi Krishna,27.7009514,85.3229183,Yatayat / OpenStreetMap
+OSM_1830711730,Bhadrakali,Purano Bus Park- Patan Dhoka,27.6991375,85.318307,Yatayat / OpenStreetMap
+OSM_1832500440,Buddhanagar Stop,Kathmandu Transit,27.6906252,85.3279258,Yatayat / OpenStreetMap
+OSM_1832985899,Gaushala Chowk Stop,Purano Bus Park - jorpati,27.708061,85.3434291,Yatayat / OpenStreetMap
+OSM_1835391891,Bhatkya Pul stop,Kathmandu Transit,27.682327,85.3388683,Yatayat / OpenStreetMap
+OSM_1835407592,Gothatar,Gothatar-Purano Buspark,27.703133,85.3694428,Yatayat / OpenStreetMap
+OSM_1835462568,Dhumbarahi,Kathmandu Transit,27.7317994,85.3443707,Yatayat / OpenStreetMap
+OSM_1835695683,Nikosera,Bhaktapur-Purano Thimi- Purano Bus Park,27.6800543,85.3984502,Yatayat / OpenStreetMap
+OSM_1845683513,ShivaDarshan Hall Stop,Kathmandu Transit,27.6923364,85.3362165,Yatayat / OpenStreetMap
+OSM_1845868815,Bijulibazar Stop,Kathmandu Transit,27.692332,85.3296148,Yatayat / OpenStreetMap
+OSM_1847670813,Jawlakhel Stop,Kathmandu Transit,27.6725769,85.3141739,Yatayat / OpenStreetMap
+OSM_1880066206,UN Stop,Kathmandu Transit,27.6781066,85.3162853,Yatayat / OpenStreetMap
+OSM_1882490078,Sankhamul Stop,Kathmandu Transit,27.6811284,85.3315875,Yatayat / OpenStreetMap
+OSM_1882601487,New Baneshwor,Kathmandu Transit,27.6903265,85.3359541,Yatayat / OpenStreetMap
+OSM_1916811643,Bhatkepati,Kathmandu Transit,27.6652154,85.2543943,Yatayat / OpenStreetMap
+OSM_1945933025,Narayan Gopal Chowk,Purano Buspark - Chabahil,27.7400221,85.3372009,Yatayat / OpenStreetMap
+OSM_1950338924,KattyaniChowk Stop,Kathmandu Transit,27.6953656,85.344466,Yatayat / OpenStreetMap
+OSM_1960042856,kaushaltar,Kathmandu Transit,27.6744801,85.3642698,Yatayat / OpenStreetMap
+OSM_1960744390,Naya Bato,Kathmandu Transit,27.6761142,85.2938967,Yatayat / OpenStreetMap
+OSM_1960744496,Kumari Club,Kathmandu Transit,27.682663,85.2985992,Yatayat / OpenStreetMap
+OSM_1965646270,Naya Bazar,Kathmandu Transit,27.6771493,85.2813895,Yatayat / OpenStreetMap
+OSM_1990735122,Jagati,Kathmandu Transit,27.6664628,85.4364631,Yatayat / OpenStreetMap
+OSM_2010535723,Gopi Krishna Stop,Kathmandu Transit,27.7206294,85.3460992,Yatayat / OpenStreetMap
+OSM_2022632174,Naya Bus Park,Chakrapath Parikrama,27.7352541,85.3076282,Yatayat / OpenStreetMap
+OSM_2051114285,Lokanthali,Kathmandu Transit,27.674908,85.3597899,Yatayat / OpenStreetMap
+OSM_2051114286,Srijana nagar,Kathmandu Transit,27.6728652,85.4049715,Yatayat / OpenStreetMap
+OSM_2051114287,Thimi,Kathmandu Transit,27.6733207,85.3854065,Yatayat / OpenStreetMap
+OSM_2051114288,gathaghar,Bagbazaar-Kamalbinayak,27.6740598,85.3733041,Yatayat / OpenStreetMap
+OSM_2051114289,kaushaltar,Kausaltar-Naikap,27.6746027,85.3644278,Yatayat / OpenStreetMap
+OSM_2051114297,Chardobato,Kathmandu Transit,27.673553,85.3817169,Yatayat / OpenStreetMap
+OSM_2054092036,Sanga,Kathmandu Transit,27.6419155,85.4776795,Yatayat / OpenStreetMap
+OSM_2080972328,Suryabinayek,Kathmandu Transit,27.6658114,85.4242078,Yatayat / OpenStreetMap
+OSM_2080972348,Chunudevi,Kathmandu Transit,27.667152,85.4170241,Yatayat / OpenStreetMap
+OSM_2080972360,Sallaghari Stop,Kathmandu Transit,27.669934,85.4111597,Yatayat / OpenStreetMap
+OSM_2291478677,Babarmahal Stop,Kathmandu Transit,27.6923373,85.3243999,Yatayat / OpenStreetMap
+OSM_2291478678,Bagbazar Stop,Kamalbinayak-Ratnapark,27.7058275,85.3172038,Yatayat / OpenStreetMap
+OSM_2291478679,Baneshwor Bus Station,Kathmandu Transit,27.688231,85.3357479,Yatayat / OpenStreetMap
+OSM_2291478681,Buddhanagar Stop,Kathmandu Transit,27.6893299,85.331039,Yatayat / OpenStreetMap
+OSM_2291478682,Byasi Stop,Kathmandu Transit,27.6748038,85.4274435,Yatayat / OpenStreetMap
+OSM_2291478683,gathaghar,Kathmandu Transit,27.6739692,85.3730508,Yatayat / OpenStreetMap
+OSM_2291478684,Jadibuti,Kathmandu Transit,27.6751899,85.3539203,Yatayat / OpenStreetMap
+OSM_2291478686,Mahakali Stop,Kathmandu Transit,27.6759638,85.4318311,Yatayat / OpenStreetMap
+OSM_2291478687,Mahalaxmi Stop,Kathmandu Transit,27.6761023,85.4337685,Yatayat / OpenStreetMap
+OSM_2291478688,Minbhawan,Kathmandu Transit,27.6876537,85.3384755,Yatayat / OpenStreetMap
+OSM_2291478689,Putalisadak Stop,Kathmandu Transit,27.7056901,85.3225524,Yatayat / OpenStreetMap
+OSM_2291478690,Radhe Radhe,Kathmandu Transit,27.6745899,85.3974795,Yatayat / OpenStreetMap
+OSM_2291478691,Sallaghari Stop,Kathmandu Transit,27.6740754,85.4099231,Yatayat / OpenStreetMap
+OSM_2291478692,Srijananagar,Kathmandu Transit,27.6729111,85.4042665,Yatayat / OpenStreetMap
+OSM_2291478693,Thimi Stop,Kathmandu Transit,27.6733356,85.3862931,Yatayat / OpenStreetMap
+OSM_2291478694,Tinkune Bhaktapur,Kathmandu Transit,27.6722127,85.4068271,Yatayat / OpenStreetMap
+OSM_2291478695,Tinkune Subidhanagar,Kathmandu Transit,27.6860559,85.3456619,Yatayat / OpenStreetMap
+OSM_2336918671,Dakshinkali,Ratna Park - Daksinkali,27.6130622,85.2646695,Yatayat / OpenStreetMap
+OSM_2336938449,Pingalasthan,Purano Bus Park - jorpati,27.7058076,85.3471055,Yatayat / OpenStreetMap
+OSM_2336968994,Barahi Movies,Kathmandu Transit,27.6659165,85.4214928,Yatayat / OpenStreetMap
+OSM_2336968995,Barahi Movies,Kathmandu Transit,27.6660167,85.4218225,Yatayat / OpenStreetMap
+OSM_2336968996,Sallaghari Stop,Kathmandu Transit,27.6708871,85.409412,Yatayat / OpenStreetMap
+OSM_2336968997,Tinkune Bhaktapur,Kathmandu Transit,27.6723655,85.4068295,Yatayat / OpenStreetMap
+OSM_2343968531,Bhaktapur Hospital Stop,Kathmandu Transit,27.6719882,85.4224082,Yatayat / OpenStreetMap
+OSM_2356769263,Bhaktapur Bus Park,Bhaktapur-Purano Thimi- Purano Bus Park,27.6713069,85.4224157,Yatayat / OpenStreetMap
+OSM_2360183669,Teaching Hospital stop,Kathmandu Transit,27.7345232,85.3307108,Yatayat / OpenStreetMap
+OSM_2373352536,Tripureshwor,Kathmandu Transit,27.6934485,85.3145773,Yatayat / OpenStreetMap
+OSM_2376160425,Balkhu Stop,Kalanki- Lagankhel,27.6847979,85.2985923,Yatayat / OpenStreetMap
+OSM_2377002167,Jadibuti,Kathmandu Transit,27.6754586,85.3516003,Yatayat / OpenStreetMap
+OSM_2377087410,Balkumari Stop,kalanki-Balkumari,27.6736699,85.3424814,Yatayat / OpenStreetMap
+OSM_2377740072,Naya Baneshwor Tampoo Station,"Naya Baneshwor, Koteshwor, Satdobato, Lagankhel, Jaulakhel, Kupandol, Naya Baneshwor",27.688586,85.3346886,Yatayat / OpenStreetMap
+OSM_2378194788,Kapan Stop,Kathmandu Transit,27.7294183,85.3540637,Yatayat / OpenStreetMap
+OSM_2382181282,Chardobato,Kathmandu Transit,27.673424,85.3811209,Yatayat / OpenStreetMap
