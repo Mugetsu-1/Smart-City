@@ -18,20 +18,26 @@ def refresh_real_data():
     """
     Refresh the real Kathmandu traffic dataset from the Department of Roads
     (DOR) SSRN public traffic portal and persist it as CSV snapshots.
+    The full multi-year series (2011/12 .. most recently published) is
+    retained; the operational snapshot uses each station's latest count.
     No synthetic data is generated anywhere in this pipeline.
     """
     print("Refreshing real traffic data from the DOR Kathmandu portal...")
     demand = fetch_dor_kathmandu_traffic(force_refresh=True)
-    print(f"Captured {len(demand)} real station rows from the DOR portal.")
+    print(f"Captured {len(demand)} real station-year rows from the DOR portal.")
 
-    print("\n--- Real DOR Kathmandu Traffic Snapshot (AADT, PCU) ---")
+    years = sorted(demand["traffic_year"].unique())
+    print(f"Published count years found: {years[0]} .. {years[-1]}")
+
+    latest = demand.sort_values("timestamp").groupby("stop_id", as_index=False).tail(1)
+    print(f"\n--- Latest Published Snapshot ({years[-1]}) ---")
     summary = (
-        demand[["location", "year", "aadt_pcu", "demand", "capacity_limit", "route_id"]]
+        latest[["location", "traffic_year", "aadt_pcu", "demand", "capacity_limit", "route_id"]]
         .sort_values("aadt_pcu", ascending=False)
     )
     print(summary.to_string(index=False))
-    print(f"\nTotal observed daily traffic (PCU): {demand['aadt_pcu'].sum():,}")
-    print(f"Total hourly system demand        : {demand['demand'].sum():,} pcu/hr")
+    print(f"\nTotal daily traffic, latest year (PCU): {latest['aadt_pcu'].sum():,}")
+    print(f"Total hourly system demand           : {latest['demand'].sum():,} pcu/hr")
     print("CSV snapshots saved to data/dor_traffic_demand.csv and data/dor_traffic_stops.csv")
 
 

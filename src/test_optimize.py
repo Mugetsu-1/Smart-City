@@ -16,11 +16,13 @@ def main():
 
     latest_ts = demand_raw["timestamp"].max()
     demand_df = (
-        demand_raw[demand_raw["timestamp"] == latest_ts][["stop_id", "demand"]]
+        demand_raw.sort_values("timestamp")
+        .groupby("stop_id", as_index=False)
+        .tail(1)[["stop_id", "demand"]]
         .rename(columns={"demand": "predicted_demand"})
         .copy()
     )
-    print(f"Loaded {len(demand_df)} real stations (count year: {latest_ts.year}).")
+    print(f"Loaded {len(demand_df)} real stations (latest published year: {latest_ts.year}).")
 
     print("Generating optimization recommendations based on demand...")
     df_rec, df_hotspots = generate_schedule_recommendations(stops_df, demand_df)

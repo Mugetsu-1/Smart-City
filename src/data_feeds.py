@@ -83,6 +83,75 @@ def _extract_yearly_traffic_rows(html_text):
     return rows
 
 
+_CELL_RE = re.compile(r"<td[^>]*>(.*?)</td>", re.S)
+
+
+def _extract_detail_rows(html_text):
+    """Parse the DOR station detail page, which contains one row per fiscal
+    year for the station (the summary page only shows the first of these).
+    Returns the full multi-year series as a list of dicts."""
+    rows = []
+    table = re.search(r'<table class="[-a-z ]*link-table.*?</table>', html_text, re.S)
+    if not table:
+        return rows
+    for part in re.split(r"</tr>", table.group(0)):
+        if "<th" in part:
+            continue
+        cells = [re.sub(r"\s+", " ", c).strip() for c in _CELL_RE.findall(part)]
+        if len(cells) < 9:
+            continue
+        year_cell = cells[7].strip()
+        if not re.fullmatch(r"\d{4}/\d{2}", year_cell):
+            continue
+        try:
+            station_no = int(cells[0])
+            aadt = int(cells[3].replace(",", ""))
+            aadt_pcu = int(cells[5].replace(",", ""))
+        except ValueError:
+            continue
+        url_match = re.search(r'href="([^"]+)"', cells[8])
+        rows.append(
+            {
+                "station_no": station_no,
+                "road_link": cells[1].replace("&amp;", "&").strip(),
+                "location": cells[2].replace("&amp;", "&").strip(),
+                "aadt": aadt,
+                "aadt_excluding_mc": int(cells[4].replace(",", "")),
+                "aadt_pcu": aadt_pcu,
+                "aadt_pcu_excluding_mc": int(cells[6].replace(",", "")),
+                "year": year_cell,
+                "detail_url": url_match.group(1) if url_match else "",
+            }
+        )
+    return rows
+
+
+def _fetch_station_series(location):
+    """Fetch every published year for a DOR station. The summary endpoint
+    only reveals the first year row; the detail page holds the full
+    multi-year series (2011/12 .. most recently published)."""
+    resp = requests.post(
+        DOR_TRAFFIC_SUMMARY_URL,
+        data={"location": location},
+        headers=HEADERS,
+        timeout=120,
+    )
+    resp.raise_for_status()
+    summary_rows = _extract_yearly_traffic_rows(resp.text)
+    if not summary_rows:
+        return []
+    detail_url = summary_rows[0]["detail_url"]
+    try:
+        detail_resp = requests.get(detail_url, headers=HEADERS, timeout=120)
+        detail_resp.raise_for_status()
+        series = _extract_detail_rows(detail_resp.text)
+        if series:
+            return series
+    except Exception:
+        pass
+    return summary_rows
+
+
 # Curated reference coordinates for the real DOR stations. These are the
 # known geographic locations (lat, lon) of the official count stations;
 # they exist to place real station data on the map when the geocoding
@@ -151,35 +220,37 @@ def _map_kathmandu_route(location):
 
 
 def _set_station_capacities(df):
-    """Map each station onto one of five capacity tiers (150-1600 pax/hr)
-    ranked by its real observed AADT. The ranking uses real portal counts
-    only; no values are invented."""
+    """Map each station onto one of five capacity tiers (250-2500 pax/hr)
+    ranked by its MOST RECENTLY PUBLISHED real AADT. The tier value is then
+    broadcast to every historical row of that station so the dashboard
+    snapshot and the multi-year history stay consistent."""
     df = df.copy()
-    df["capacity_tier"] = pd.qcut(
-        df["aadt_pcu"], 5, labels=False, duplicates="drop"
+    latest = df.sort_values("timestamp").groupby("stop_id", as_index=False).tail(1)
+    latest = latest.copy()
+    latest["capacity_tier"] = pd.qcut(
+        latest["aadt_pcu"], 5, labels=False, duplicates="drop"
     )
-    cap_map = {0: 200, 1: 350, 2: 600, 3: 1000, 4: 1600}
-    df["capacity_limit"] = df["capacity_tier"].map(cap_map).astype(int)
-    return df
+    cap_map = {0: 250, 1: 500, 2: 900, 3: 1500, 4: 2500}
+    cap_by_stop = latest.set_index("stop_id")["capacity_tier"].map(cap_map).astype(int)
+    df["capacity_limit"] = df["stop_id"].map(cap_by_stop).fillna(250).astype(int)
+    return df.drop(columns=[c for c in ["sort_key"] if c in df.columns])
 
 
 def _build_station_frame():
-    """Scrape the public DOR portal and return real Kathmandu traffic counts."""
-    print("Scraping Department of Roads (DOR) Kathmandu traffic portal...")
+    """Scrape the public DOR portal and return the full multi-year Kathmandu
+    traffic count series (one row per station per published fiscal year)."""
+    print("Scraping Department of Roads (DOR) Kathmandu traffic portal (all published years)...")
     collected = []
     for location in KATHMANDU_TRAFFIC_LOCATIONS:
         try:
-            resp = requests.post(
-                DOR_TRAFFIC_SUMMARY_URL,
-                data={"location": location},
-                headers=HEADERS,
-                timeout=120,
-            )
-            resp.raise_for_status()
-            rows = _extract_yearly_traffic_rows(resp.text)
-            if rows:
-                collected.extend(rows)
-                print(f"  DOR: {location} -> {rows[0]['aadt_pcu']} PCU (year {rows[0]['year']})")
+            series = _fetch_station_series(location)
+            if series:
+                collected.extend(series)
+                years = sorted({r["year"] for r in series})
+                print(
+                    f"  DOR: {location} -> {len(series)} counts "
+                    f"(latest {series[-1]['year']}: {series[-1]['aadt_pcu']} PCU)"
+                )
         except Exception as exc:
             print(f"  DOR: {location} failed ({exc})")
         time.sleep(DOR_FETCH_DELAY_SECONDS)
@@ -197,8 +268,11 @@ def _build_station_frame():
         .reset_index(drop=True)
     )
 
-    # Timestamp = July of the fiscal year start (DOR counts are fiscal-year AADT).
-    df["timestamp"] = df["year"].str[:4].astype(int).apply(lambda y: pd.Timestamp(year=y, month=7, day=1))
+    # Timestamp = 1 January of the fiscal year end (DOR fiscal-year counts).
+    df["timestamp"] = pd.to_datetime(
+        (df["year"].str[:4].astype(int) + 1).astype(str), format="%Y", errors="coerce"
+    ).dt.normalize()
+    df["sort_key"] = df["year"].str[:4].astype(int)
     df["demand"] = (df["aadt_pcu"] / 24.0).round().astype(int)
     df["stop_id"] = df["location"].str.replace(r"[^A-Za-z0-9]+", "_", regex=True).str.strip("_")
     df["stop_name"] = df["location"]
@@ -210,13 +284,14 @@ def _build_station_frame():
     df["traffic_aadt"] = df["aadt"]
     df["traffic_aadt_pcu"] = df["aadt_pcu"]
 
-    print(f"Geocoding {len(df)} real stations via OpenStreetMap Nominatim...")
-    coords = []
-    for location in df["location"].tolist():
-        coords.append(_geocode_location(location))
+    stations = df[["station_no", "location", "stop_name"]].drop_duplicates("station_no")
+    print(f"Geocoding {len(stations)} real stations via OpenStreetMap Nominatim...")
+    coords_by_location = {}
+    for _, row in stations.iterrows():
+        coords_by_location[row["location"]] = _geocode_location(row["location"])
         time.sleep(1.0)
-    df["latitude"] = [c[0] for c in coords]
-    df["longitude"] = [c[1] for c in coords]
+    df["latitude"] = df["location"].map(lambda loc: coords_by_location[loc][0])
+    df["longitude"] = df["location"].map(lambda loc: coords_by_location[loc][1])
 
     df = _set_station_capacities(df)
     df["fetched_at"] = pd.Timestamp.now(tz="Asia/Katmandu").isoformat()

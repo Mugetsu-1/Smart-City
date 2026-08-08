@@ -10,8 +10,8 @@ This project ingests **real traffic counts from the Nepal Department of Roads (D
 
 ## Live Status — NO synthetic data
 - Data source: **Department of Roads (DOR) `ssrn.dor.gov.np`** — real Annual Average Daily Traffic (AADT) in PCUs per station.
-- Data is scraped from the official portal and cached as real CSV snapshots (`data/dor_traffic_demand.csv`, `data/dor_traffic_stops.csv`).
-- The dashboard refreshes automatically and can force a fresh scrape from the portal.
+- The full **multi-year series (2011/12 – 2024/25)** is scraped from each station's official detail page; the operational snapshot uses **each station's most recently published count** (2024/25).
+- Data is cached as real CSV snapshots (`data/dor_traffic_demand.csv`, `data/dor_traffic_stops.csv`); the dashboard refreshes automatically and can force a fresh scrape from the portal.
 - **No synthetic or fabricated demand values exist anywhere in this system.**
 
 ## Repository Structure
@@ -65,6 +65,6 @@ This scrapes the DOR portal, saves the real CSV snapshots (and optionally ingest
 Open `http://localhost:8501` to view the interactive map, KPI metrics, dispatch control table, live operational snapshot, and per-station traffic charts.
 
 ## Data Sources
-- **Department of Roads (DOR) — SSRN public traffic portal**: `https://ssrn.dor.gov.np/traffic_controller` (real AADT counts in PCUs)
+- **Department of Roads (DOR) — SSRN public traffic portal**: `https://ssrn.dor.gov.np/traffic_controller` (real AADT counts in PCUs, all published years 2011/12 – 2024/25)
 - **OpenStreetMap Nominatim**: geocoding for the real station names
 - Optional Mirror: PostgreSQL / PostGIS (same real data, ingested in `dor_traffic_demand`)

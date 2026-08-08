@@ -9,8 +9,8 @@ Traditional public transit systems rely on rigid, fixed bus timetables published
 This project builds an enterprise-grade, data-driven dynamic dispatch system titled **"Smart City: Dynamic Transit Scheduling and Route Optimization in Nepal"**. The system replaces static timetables with an adaptive network that reads **real traffic counts from the Nepal Department of Roads (DOR)** and automatically recommends fleet adjustments.
 
 The implementation is a **real-data system - no synthetic data**:
-- Real Kathmandu traffic counts come from the **DOR SSRN public traffic portal** (`ssrn.dor.gov.np`) — 21 official Kathmandu Valley count stations with Annual Average Daily Traffic (AADT) figures in PCUs.
-- The current operational snapshot is the real count year published by the government (2011/12 fiscal year).
+- Real Kathmandu traffic counts come from the **DOR SSRN public traffic portal** (`ssrn.dor.gov.np`) — 21 official Kathmandu Valley count stations.
+- The full **published multi-year series (2011/12 – 2024/25)** per station is scraped from each station's official detail page; the operational snapshot uses **each station's most recently published count (2024/25)**.
 - The dashboard reads the real snapshot (CSV cache refreshed from the portal), and can re-scrape the portal on demand.
 
 ## 3. How the System Solves the Problem
@@ -43,6 +43,7 @@ The implementation is a **real-data system - no synthetic data**:
 | Portal URL | https://ssrn.dor.gov.np/traffic_controller |
 | Data type | Annual Average Daily Traffic (AADT), incl./excl. MC & rickshaws, in PCUs, per station, per year |
 | Stations modelled | 21 official Kathmandu Valley count stations |
-| Latest published year | 2011/12 (as published by the portal) |
+| Published years | 2011/12 – 2024/25 (10 count years per station) |
+| Operational snapshot | Each station's most recently published count (2024/25) |
 | Geocoding | OpenStreetMap Nominatim (with curated real reference coordinates as fallback) |
 | Synthetic data | None. No generated, simulated, or fabricated demand exists in any layer. |

@@ -147,12 +147,14 @@ if len(stops_df) == 0 or len(demand_df) == 0:
 available_routes = ["All Corridors"] + list(stops_df["route_id"].unique())
 selected_route = st.sidebar.selectbox("Filter Transit Corridor", available_routes)
 
-latest_ts = demand_df["timestamp"].max()
-latest_data = demand_df[demand_df["timestamp"] == latest_ts].copy()
+# Operational snapshot: the most recently published count per station.
+latest_data = demand_df.sort_values("timestamp").groupby("stop_id", as_index=False).tail(1)
 if len(latest_data) == 0:
     latest_data = demand_df.copy()
 latest_data["predicted_demand"] = pd.to_numeric(latest_data["demand"], errors="coerce").fillna(0)
 latest_data = latest_data[["stop_id", "predicted_demand", "demand"]].copy()
+
+latest_year = demand_df["traffic_year"].max()
 
 # Generate Optimization Recommendations
 df_rec, df_hotspots = generate_schedule_recommendations(stops_df, latest_data)
@@ -199,7 +201,7 @@ with live_cols[0]:
 with live_cols[1]:
     st.markdown(
         f"**Real Demand Feed**  \n{demand_source}  \n"
-        f"Count year: {latest_ts.strftime('%Y')} (annual AADT snapshot)"
+        f"Latest published count year: {latest_year}"
     )
 
 st.subheader("Corridor Dispatch Priorities")
@@ -321,44 +323,45 @@ with col_table:
 
 st.write("---")
 
-# Observed traffic by station (real DOR AADT PCU data)
-st.subheader("Observed Traffic by Station (DOR Portal)")
+# Real multi-year traffic history (DOR published counts per station)
+st.subheader("Traffic History by Station (DOR Portal, Real Counts)")
 
 route_demand = demand_df.copy()
 if selected_route != "All Corridors":
     selected_stops = stops_df[stops_df["route_id"] == selected_route]["stop_id"].tolist()
     route_demand = route_demand[route_demand["stop_id"].isin(selected_stops)]
 
-station_view = (
-    route_demand.groupby("stop_name", as_index=False)["demand"]
+station_years = (
+    route_demand.groupby(["stop_name", "timestamp"], as_index=False)["traffic_aadt_pcu"]
     .sum()
-    .sort_values("demand", ascending=True)
+    .sort_values("timestamp")
 )
 
-fig = go.Figure(go.Bar(
-    x=station_view["demand"],
-    y=station_view["stop_name"],
-    orientation="h",
-    marker=dict(
-        color=station_view["demand"],
-        colorscale="Turbo",
-        line=dict(color="#0F172A", width=0.5),
-    ),
-))
+fig = go.Figure()
+for stop_name, series in station_years.groupby("stop_name"):
+    fig.add_trace(go.Scatter(
+        x=series["timestamp"],
+        y=series["traffic_aadt_pcu"],
+        mode="lines+markers",
+        name=stop_name,
+        line=dict(width=2),
+    ))
 
 fig.update_layout(
-    title=f"Real Traffic Demand per Station (Corridor: {selected_route}) - Count Year {latest_ts.year}",
-    xaxis_title="Demand (pcu / hr)",
-    yaxis_title="DOR Station",
+    title=f"Published Annual Average Daily Traffic (PCU) per Station - Corridor: {selected_route}",
+    xaxis_title="Count Year",
+    yaxis_title="AADT (PCU / day)",
     template="plotly_dark",
     margin=dict(l=40, r=40, t=60, b=40),
-    height=520,
+    height=480,
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
 )
 
 st.plotly_chart(fig, width='stretch')
 
 st.caption(
-    "Data: Department of Roads (DOR) - Strategic Road Network (SSRN) public traffic "
-    "count portal. Annual Average Daily Traffic (AADT) in PCUs per real Kathmandu "
-    "Valley count station. No synthetic data is used anywhere in this system."
+    f"Data: Department of Roads (DOR) - Strategic Road Network (SSRN) public traffic "
+    f"count portal, all published years (2011/12 .. {latest_year}). Real Annual Average "
+    "Daily Traffic (AADT) in PCUs per official Kathmandu Valley count station. "
+    "No synthetic data is used anywhere in this system."
 )
