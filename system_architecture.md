@@ -1,44 +1,49 @@
 # Smart City Transit Optimization: System Architecture & Design
 
 ## 1. System Overview
-The **Smart City: Dynamic Transit Scheduling and Route Optimization** system is an enterprise data science architecture engineered to transform static transit scheduling into an adaptive dispatch network for South Asian urban corridors like the Kathmandu Valley.
+The **Smart City: Dynamic Transit Scheduling and Route Optimization** system is an enterprise data engineering architecture engineered to turn **real government traffic statistics** into an adaptive dispatch network for the Kathmandu Valley, Nepal. No synthetic demand data is used anywhere.
 
 ```mermaid
 graph TD
-    A["Raw Transit Telemetry (Tap Events & GPS Pings)"] -->|PostgreSQL Ingestion| B["Geospatial Database (PostgreSQL + PostGIS)"]
-    B -->|Hourly Aggregation| C["Materialized View (mv_hourly_stop_demand)"]
-    C -->|Feature Engineering & Lags| D["XGBoost Demand Forecaster"]
-    D -->|1-24h Predicted Passengers| E["Spatial Hotspot Engine (K-Means Clustering)"]
-    E -->|Occupancy Ratio Calculation| F["Decision Engine (Dispatch Rules)"]
+    A["Department of Roads SSRN Portal (ssrn.dor.gov.np)"] -->|Scraped per-station AADT Tables| B["Real Data Layer (src/data_feeds.py)"]
+    B -->|Geocode + CSV Cache| C["Transit Snapshot (data/dor_traffic_*)"]
+    C -->|Optional Mirror| D["PostgreSQL + PostGIS (same real data)"]
+    C --> E["Spatial Hotspot Engine (K-Means Clustering)"]
+    E -->|Pressure Ratio Calculation| F["Decision Engine (Dispatch Rules)"]
     F -->|Automated Instructions| G["Streamlit Control Center (app/app.py)"]
 ```
 
 ## 2. Architectural Layers
 
-### 2.1 Geospatial Data Layer (`sql/schema.sql`)
-- **Database Engine**: PostgreSQL with PostGIS extension.
-- **Tables**:
-  - `bus_stops`: Master stop definitions with PostGIS `GEOMETRY(Point, 4326)` centered on Nepal coordinates (~27.7172 N, 85.3240 E).
-  - `tap_events`: Granular passenger card entry and exit timestamps.
-  - `vehicle_gps`: Real-time vehicle telemetry (`vehicle_id`, `current_occupancy`, `speed_kmh`, `location`).
-  - `environmental_context`: Temperature, precipitation, Nepal Saturday weekend flags, and festival season indicators.
-- **Indexing**: GIST spatial indexes on geometry columns for fast spatial proximity queries (`ST_DWithin`).
-- **Materialized View**: `mv_hourly_stop_demand` aggregates raw tap logs into hourly passenger flow windows per stop.
+### 2.1 Real Data Layer (`src/data_feeds.py`, `src/generate_data.py`)
+- **Real Primary Source**: Department of Roads (DOR) SSRN public traffic portal — `https://ssrn.dor.gov.np/traffic_controller`.
+- **Ingestion**: For each of the 21 official Kathmandu Valley count stations, the AADT summary page is fetched and parsed:
+  - Station No, Road Link, Location
+  - AADT (total, excluding MC & rickshaws)
+  - AADT in PCUs (total, excluding MC & rickshaws), Year
+- **Caching**: Real snapshots are cached as CSVs (`data/dor_traffic_demand.csv`, `data/dor_traffic_stops.csv`) to keep the dashboard fast; a forced scrape re-hits the official portal.
+- **Geocoding**: Real station names are geocoded with OpenStreetMap Nominatim, with curated real reference coordinates for each station used when the service is unreachable.
+- **PostgreSQL/PostGIS Mirror (optional)**: `sql/schema.sql` defines a PostGIS-schema (`bus_stops` + `dor_traffic_demand`) populated from the mirrored real rows.
 
-### 2.2 Machine Learning & Feature Engineering Layer (`src/train_model.py`)
-- **Features**:
-  - Temporal: Hour of day, day of week, Nepal Saturday weekend flag (Saturday=1, Sunday=0), morning/evening rush hour flags, Dashain/Tihar festival flags.
-  - Environmental: Temperature, precipitation, heavy monsoon precipitation flag (>2.0 mm/hr).
-  - Time-series Lags: 1-hour, 24-hour, 168-hour (1-week) lags, 3-hour rolling mean, 24-hour rolling mean.
-- **Model**: `XGBRegressor` forecasting hourly passenger demand.
-- **Validation**: Chronological 80/20 train/test split evaluated via RMSE and MAE.
+### 2.2 Spatial Clustering & Dispatch Optimization Layer (`src/optimize.py`)
+- **Pressure Computation**: Station hourly load (derived from the real AADT) / station capacity tier (derived from real AADT ranking) yields a per-junction pressure ratio.
+- **Spatial Hotspot Clustering**: Demand-weighted K-Means clustering on the real station coordinates.
+- **Automated Decision Engine**: Rule-based dispatch instructions across four alert levels (RED / AMBER / GREEN / BLUE):
+  - `RED`: Critical overcrowding — inject express buses and cut headway.
+  - `AMBER`: High demand — reduce headway and dispatch supplemental microbuses.
+  - `GREEN`: Normal operation — maintain scheduled timetable.
+  - `BLUE`: Underutilized — extend headway or re-route fleet.
 
-### 2.3 Spatial Clustering & Dispatch Optimization Layer (`src/optimize.py`)
-- **Occupancy Computation**: Compares forecasted passenger demand against Nepal vehicle capacities (15-20 microbus vs 40-60 Sajha Yatayat bus).
-- **Spatial Hotspot Clustering**: Demand-weighted K-Means clustering on stop spatial coordinates (`latitude`, `longitude`).
-- **Automated Decision Engine**: Generates real-time dispatch commands for transit operators.
+### 2.3 Visualization & Control Layer (`app/app.py`)
+- **Streamlit Interface**: Dark high-tech command dashboard.
+- **Folium Map**: Real Kathmandu stations rendered with color-coded congestion markers and hotspot cluster polylines.
+- **Analytics**: System-wide KPI cards, sortable dispatch recommendation table, live operational snapshot, and real observed traffic charts per station.
 
-### 2.4 Visualization & Control Layer (`app/app.py`)
-- **Streamlit Interface**: Dark high-tech dashboard for transit managers.
-- **Folium Map**: Rendered map centered on Kathmandu Valley with color-coded stop congestion markers and cluster polylines.
-- **Analytics**: System-wide KPI cards, sortable dispatch recommendation table, and Plotly historical/forecast trend chart.
+## 3. Data Provenance
+| Field | Source |
+|-------|--------|
+| Traffic counts | Nepal DOR SSRN portal (official) |
+| Coordinates | OpenStreetMap Nominatim + curated references |
+| Dataset size | 21 stations × AADT figures |
+| Synthetic data | None |
+| Refresh | On-demand re-scrape from the official portal |

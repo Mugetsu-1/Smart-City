@@ -13,20 +13,18 @@ if __name__ == "__main__":
     python_exe = os.path.join(".venv", "Scripts", "python.exe")
     if not os.path.exists(python_exe):
         python_exe = "python"
-        
+
     print("\n=======================================================")
     print(" Smart City: Dynamic Transit Scheduling System (Nepal)")
+    print("        Real-data pipeline - Department of Roads")
     print("=======================================================\n")
-    
-    print("--- STEP 1: Generating Dataset & Initializing Schema ---")
+
+    print("--- STEP 1: Fetching Real DOR Kathmandu Traffic Data ---")
     run_cmd(f"{python_exe} src/generate_data.py")
-    
-    print("\n--- STEP 2: Training XGBoost Demand Forecasting Model ---")
-    run_cmd(f"{python_exe} src/train_model.py")
-    
-    print("\n--- STEP 3: Testing Schedule Optimization & Hotspots ---")
+
+    print("\n--- STEP 2: Testing Schedule Optimization & Hotspots ---")
     run_cmd(f"{python_exe} src/test_optimize.py")
-    
+
     print("\n=======================================================")
     print(" PIPELINE EXECUTION COMPLETED SUCCESSFULLY")
     print("=======================================================")

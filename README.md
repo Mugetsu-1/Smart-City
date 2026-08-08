@@ -1,84 +1,70 @@
 # Smart City: Dynamic Transit Scheduling and Route Optimization in Nepal
 
-An enterprise-grade data science, geospatial engineering, and machine learning system that transforms static urban transit timetables into an adaptive dynamic dispatch network for the Kathmandu Valley, Nepal.
+An enterprise-grade data science and geospatial engineering system that transforms static urban transit timetables into an adaptive dynamic dispatch network for the Kathmandu Valley, Nepal — powered exclusively by **real government traffic data**.
 
 ## The Core Problem
-Public transit buses in growing metropolitan areas like the Kathmandu Valley are dangerously overcrowded during peak commute hours, yet run completely empty off-peak, wasting fuel, escalating operational costs, and causing severe driver burnout.
+Public transit in growing metropolitan areas like the Kathmandu Valley is dangerously overcrowded during peak commute hours, yet runs empty off-peak, wasting fuel, escalating operational costs, and causing severe driver burnout.
 
 ## The Solution
-This project ingests real Kathmandu transit network data and live weather inputs, forecasts passenger demand 1 to 24 hours in advance using XGBoost, identifies spatial congestion hotspots via K-Means clustering, and automatically issues dispatch instructions to transit authorities.
+This project ingests **real traffic counts from the Nepal Department of Roads (DOR) SSRN public traffic portal** for 21 official Kathmandu Valley count stations, computes pressure ratios against stop capacity, identifies spatial congestion hotspots via K-Means clustering, and automatically issues dispatch instructions to transit authorities.
 
-## Live Status
-This is a **hybrid real-time transit command center**:
-- Real Kathmandu transit network geometry is loaded from the Yatayat/OpenStreetMap export.
-- Weather is pulled from the Department of Hydrology and Meteorology.
-- The dashboard refreshes automatically.
-- Passenger-demand forecasting still uses the best available modeled historical demand layer until a live operator telemetry feed is connected.
+## Live Status — NO synthetic data
+- Data source: **Department of Roads (DOR) `ssrn.dor.gov.np`** — real Annual Average Daily Traffic (AADT) in PCUs per station.
+- Data is scraped from the official portal and cached as real CSV snapshots (`data/dor_traffic_demand.csv`, `data/dor_traffic_stops.csv`).
+- The dashboard refreshes automatically and can force a fresh scrape from the portal.
+- **No synthetic or fabricated demand values exist anywhere in this system.**
 
 ## Repository Structure
 
 ```
 smart_city_transit/
-├── docker-compose.yml       # PostgreSQL 15 & PostGIS database stack definition
+├── docker-compose.yml       # Optional PostgreSQL + PostGIS stack
 ├── requirements.txt         # Project Python dependencies
 ├── README.md                # Project documentation and quickstart guide
 ├── system_architecture.md   # Architectural design document
 ├── project_description.md   # Project purpose, data overview, and stakeholder benefits
-├── run.py                   # Master execution script for complete pipeline
+├── run.py                   # Master execution script for the real-data pipeline
 ├── sql/
-│   └── schema.sql           # PostGIS schema, indexes, and materialized view definitions
+│   └── schema.sql           # PostGIS schema and spatial indexes
 ├── src/
-│   ├── fetch_real_nepal_data.py  # Downloads Kathmandu transit network data and weather snapshot
-│   ├── generate_data.py          # Modeled fallback dataset generator and DB ingestor
-│   ├── data_feeds.py             # Real/live/modeled feed loader with priority order
-│   ├── train_model.py            # Nepal feature engineering and XGBoost training pipeline
-│   ├── optimize.py               # Occupancy calculations, K-Means clustering, and dispatch rules
-│   └── test_optimize.py          # Optimization engine verification test script
+│   ├── generate_data.py     # Scrapes the real DOR portal and persists snapshots
+│   ├── data_feeds.py        # Real DOR portal feed + local snapshot cache logic
+│   ├── optimize.py          # Occupancy calculations, K-Means clustering, dispatch rules
+│   └── test_optimize.py     # Optimization engine verification test (real data)
+├── data/
+│   ├── dor_traffic_stops.csv    # 21 real DOR Kathmandu Valley stations
+│   └── dor_traffic_demand.csv    # Real AADT traffic counts per station
 └── app/
     └── app.py               # Streamlit Command Center Interactive Dashboard
 ```
 
-## Key Kathmandu Corridors Covered
-- **Ring Road Corridor**: Gongabu, Maharajgunj, Chabahil, Gaushala, Koteshwor, Satdobato, Balkhu, Kalanki, Swayambhu, Balaju
-- **Ratna Park - Lagankhel Corridor**: Ratna Park, Lainchaur, Maitighar, Thapathali, Kupondole, Pulchowk, Jawalakhel, Lagankhel
-- **Arniko Highway Corridor**: New Baneshwor, Tinkune, Jadibuti, Lokanthali, Kaushaltar, Gatthaghar, Suryabinayak
-- **Tribhuvan Rajpath Corridor**: Kalanki Central, Gurjudhara, Thankot, Nagdhunga
-- **Chabahil - Jorpati Corridor**: Jorpati Chowk
+## Key Kathmandu Corridors Covered (real DOR stations)
+- **Ring Road Corridor**: Manohara Bridge, Balkhu East, Sinamangal, Narayan Gopal Chowk, Banasthali, Balaju Bypass, Kalanki
+- **Ratna Park - Lagankhel Corridor**: Satdobato North, Satdobato Junction, Satdobato South, Gwarko, Byasi Chowk
+- **Chabahil - Jorpati Corridor**: Chabahil East, Jorpati North, Gangalal Hospital
+- **Tribhuvan Rajpath Corridor**: Taudaha, Nagdhunga
+- **Arniko Highway Corridor**: Manohara Bridge, Kharipati, Hanumante Bridge
 
 ## Quickstart Guide
 
 ### 1. Environment Setup
-Install required Python dependencies:
 ```bash
 .venv\Scripts\pip.exe install -r requirements.txt
 ```
 
-### 2. Execute Data Generation & Model Training Pipeline
-Run the master script to generate the modeled fallback dataset if needed, set up PostgreSQL/PostGIS schema (or CSV fallback), train the XGBoost demand forecasting model, and test the schedule optimization engine:
+### 2. Fetch Real Data & Test the Pipeline
 ```bash
 .venv\Scripts\python.exe run.py
 ```
+This scrapes the DOR portal, saves the real CSV snapshots (and optionally ingests into PostgreSQL/PostGIS if running), then tests the schedule optimization engine on the real traffic counts.
 
 ### 3. Launch the Streamlit Control Center
-Start the interactive command center dashboard:
 ```bash
 .venv\Scripts\streamlit.exe run app/app.py
 ```
-Open `http://localhost:8501` in your browser to view the interactive map, KPI metrics, dispatch control table, live operational snapshot, and forecast trend charts.
+Open `http://localhost:8501` to view the interactive map, KPI metrics, dispatch control table, live operational snapshot, and per-station traffic charts.
 
-## Real Feed Drop-In
-If you have a live Nepal operator feed, place a CSV at one of these paths and the app will pick it up automatically:
-- `data/live_operator_demand.csv`
-- `data/live_demand.csv`
-
-Required columns:
-- `timestamp`
-- `stop_id`
-- `demand`
-
-Optional columns:
-- `temperature_c` or `temp_c`
-- `precipitation_mm`
-- `is_saturday`
-- `is_holiday`
-- `is_festival`
+## Data Sources
+- **Department of Roads (DOR) — SSRN public traffic portal**: `https://ssrn.dor.gov.np/traffic_controller` (real AADT counts in PCUs)
+- **OpenStreetMap Nominatim**: geocoding for the real station names
+- Optional Mirror: PostgreSQL / PostGIS (same real data, ingested in `dor_traffic_demand`)

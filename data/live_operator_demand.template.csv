@@ -1,2 +1,0 @@
-timestamp,stop_id,demand,temperature_c,precipitation_mm,is_saturday,is_holiday,is_festival
-2026-08-07T08:00:00+05:45,STOP_ID_EXAMPLE,0,0.0,0.0,0,0,0

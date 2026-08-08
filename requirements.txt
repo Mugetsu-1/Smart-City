@@ -1,14 +1,10 @@
 pandas
 numpy
-xgboost
+requests
 scikit-learn
-shap
 streamlit
 folium
 streamlit-folium
 sqlalchemy
 psycopg2-binary
-geoalchemy2
-h3
-geopandas
 plotly

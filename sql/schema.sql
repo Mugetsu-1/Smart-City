@@ -1,5 +1,7 @@
 -- ============================================================
 -- Smart City Nepal Transit DB Schema
+-- Mirrors REAL Department of Roads (DOR) Kathmandu traffic data.
+-- No synthetic data tables exist in this schema.
 -- Supports: PostGIS (preferred) with earthdistance fallback
 -- ============================================================
 
@@ -61,14 +63,13 @@ BEGIN
 END $$;
 
 -- ============================================================
--- 1. Bus Stops Table
+-- 1. Bus Stops Table (real DOR Kathmandu stations)
 -- Uses geometry(Point,4326) when PostGIS is available,
 -- or native POINT when running in fallback mode.
 -- ============================================================
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'postgis') THEN
-        -- PostGIS mode: proper geometry column
         CREATE TABLE IF NOT EXISTS bus_stops (
             stop_id        VARCHAR(50) PRIMARY KEY,
             stop_name      VARCHAR(100) NOT NULL,
@@ -77,7 +78,6 @@ BEGIN
             location       geometry(Point, 4326) NOT NULL
         );
     ELSE
-        -- Fallback mode: native point column
         CREATE TABLE IF NOT EXISTS bus_stops (
             stop_id        VARCHAR(50) PRIMARY KEY,
             stop_name      VARCHAR(100) NOT NULL,
@@ -103,82 +103,28 @@ BEGIN
 END $$;
 
 -- ============================================================
--- 2. Passenger Tap Card Events Table
+-- 2. Real DOR Traffic Counts Table
+-- Annual Average Daily Traffic (AADT) per official DOR station.
 -- ============================================================
-CREATE TABLE IF NOT EXISTS tap_events (
-    event_id      BIGSERIAL PRIMARY KEY,
-    card_id       VARCHAR(64)  NOT NULL,
-    stop_id       VARCHAR(50)  REFERENCES bus_stops(stop_id),
-    tap_type      VARCHAR(10)  CHECK (tap_type IN ('IN', 'OUT')),
-    tap_timestamp TIMESTAMP WITH TIME ZONE NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_tap_events_stop_time
-    ON tap_events(stop_id, tap_timestamp);
-
--- ============================================================
--- 3. Vehicle Live GPS Ping Stream Table
--- ============================================================
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'postgis') THEN
-        CREATE TABLE IF NOT EXISTS vehicle_gps (
-            ping_id           BIGSERIAL PRIMARY KEY,
-            vehicle_id        VARCHAR(50)    NOT NULL,
-            route_id          VARCHAR(50)    NOT NULL,
-            current_occupancy INT            NOT NULL,
-            speed_kmh         NUMERIC(5,2),
-            ping_timestamp    TIMESTAMP WITH TIME ZONE NOT NULL,
-            location          geometry(Point, 4326) NOT NULL
-        );
-    ELSE
-        CREATE TABLE IF NOT EXISTS vehicle_gps (
-            ping_id           BIGSERIAL PRIMARY KEY,
-            vehicle_id        VARCHAR(50)    NOT NULL,
-            route_id          VARCHAR(50)    NOT NULL,
-            current_occupancy INT            NOT NULL,
-            speed_kmh         NUMERIC(5,2),
-            ping_timestamp    TIMESTAMP WITH TIME ZONE NOT NULL,
-            location          POINT          NOT NULL
-        );
-    END IF;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_vehicle_gps_timestamp ON vehicle_gps(ping_timestamp);
-
--- ============================================================
--- 4. Hourly Weather and Environmental Context Table
--- ============================================================
-CREATE TABLE IF NOT EXISTS environmental_context (
-    context_timestamp TIMESTAMP WITH TIME ZONE PRIMARY KEY,
-    temperature_c     NUMERIC(4,2),
-    precipitation_mm  NUMERIC(5,2),
-    is_holiday        INT DEFAULT 0,
-    is_saturday       INT DEFAULT 0,
-    is_festival       INT DEFAULT 0
+CREATE TABLE IF NOT EXISTS dor_traffic_demand (
+    station_no            INT NOT NULL,
+    year                  VARCHAR(10) NOT NULL,
+    location              VARCHAR(120),
+    road_link             VARCHAR(60),
+    aadt                  INT,
+    aadt_excluding_mc     INT,
+    aadt_pcu              INT,
+    aadt_pcu_excluding_mc INT,
+    demand                INT,
+    capacity_limit        INT,
+    route_id              VARCHAR(60),
+    latitude              FLOAT,
+    longitude             FLOAT,
+    PRIMARY KEY (station_no, year)
 );
 
 -- ============================================================
--- 5. Materialized View: Hourly Tap-In Demand Aggregation
--- ============================================================
-DROP MATERIALIZED VIEW IF EXISTS mv_hourly_stop_demand CASCADE;
-
-CREATE MATERIALIZED VIEW mv_hourly_stop_demand AS
-SELECT
-    date_trunc('hour', t.tap_timestamp AT TIME ZONE 'UTC') AS demand_hour,
-    t.stop_id,
-    COUNT(CASE WHEN t.tap_type = 'IN'  THEN 1 END) AS tap_in_count,
-    COUNT(CASE WHEN t.tap_type = 'OUT' THEN 1 END) AS tap_out_count,
-    COUNT(CASE WHEN t.tap_type = 'IN'  THEN 1 END) -
-    COUNT(CASE WHEN t.tap_type = 'OUT' THEN 1 END) AS net_passenger_change
-FROM tap_events t
-GROUP BY 1, 2;
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_hourly_demand
-    ON mv_hourly_stop_demand(demand_hour, stop_id);
-
--- ============================================================
--- 6. View: Proximity Query for Congested Stop Clusters
+-- 3. View: Proximity Query for Congested Stop Clusters
 -- Identifies adjacent stops within 500 m using earthdistance
 -- ============================================================
 DROP VIEW IF EXISTS v_congested_stop_clusters;
