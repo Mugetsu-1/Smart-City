@@ -23,7 +23,7 @@ def refresh_real_data():
     No synthetic data is generated anywhere in this pipeline.
     """
     print("Refreshing real traffic data from the DOR Kathmandu portal...")
-    demand = fetch_dor_kathmandu_traffic(force_refresh=True)
+    demand = fetch_dor_kathmandu_traffic(live=True)
     print(f"Captured {len(demand)} real station-year rows from the DOR portal.")
 
     years = sorted(demand["traffic_year"].unique())

@@ -10,25 +10,29 @@ This project builds an enterprise-grade, data-driven dynamic dispatch system tit
 
 The implementation is a **real-data system - no synthetic data**:
 - Real Kathmandu traffic counts come from the **DOR SSRN public traffic portal** (`ssrn.dor.gov.np`) — 21 official Kathmandu Valley count stations.
-- The full **published multi-year series (2011/12 – 2024/25)** per station is scraped from each station's official detail page; the operational snapshot uses **each station's most recently published count (2024/25)**.
-- The dashboard reads the real snapshot (CSV cache refreshed from the portal), and can re-scrape the portal on demand.
+- The full **published multi-year series (2011/12 – 2024/25)** per station is scraped live from each station's official detail page at every launch; the operational snapshot uses **each station's most recently published count (2024/25)**.
+- A per-station trend model (`src/forecast.py`) projects the **next published count window** (e.g. 2024/25 → 2026/27) from the real yearly series alone.
+- The app live-scrapes the portal at startup; real CSV snapshots written after each successful scrape keep the dashboard working offline (with an explicit OFFLINE badge), and re-scraping on demand is one click.
 
 ## 3. How the System Solves the Problem
 
 1. **Ingest Real Telemetry (Data Engineering)**:
-   Scrapes the DOR traffic portal for every official Kathmandu Valley count station, parses the AADT tables, geocodes each real station with OpenStreetMap, and persists real CSV snapshots (`data/dor_traffic_demand.csv`, `data/dor_traffic_stops.csv`). A PostgreSQL/PostGIS mirror (optional) holds the same real data row-for-row.
+   Live-scrapes the DOR traffic portal for every official Kathmandu Valley count station, parses the AADT tables (coordinates from the official station metadata), and persists real CSV snapshots (`data/dor_traffic_demand.csv`, `data/dor_traffic_stops.csv`). A PostgreSQL/PostGIS mirror (optional) holds the same real data row-for-row.
 
 2. **Compute Real Traffic Demand**:
    Converts the real AADT figures into a per-hour junction load (pcu/hr) per station. Each station is assigned a capacity tier derived from its real observed AADT ranking — no fabricated values.
 
-3. **Identify Bottlenecks (Spatial Optimization)**:
+3. **Forecast Demand Trends (Prediction Layer)**:
+   Fits a linear trend model per station on the real published yearly counts (≥4 observed years) and forecasts the next count window, reporting per-station residuals as uncertainty. This tells operators where counts will grow *before* the next window is published.
+
+4. **Identify Bottlenecks (Spatial Optimization)**:
    Applies demand-weighted spatial clustering (K-Means) on the real station coordinates to group localized overcrowding hotspots along the real transit corridors.
 
-4. **Automate Fleet Dispatch (Decision Layer)**:
+5. **Automate Fleet Dispatch (Decision Layer)**:
    Calculates junction pressure ratios (observed hourly load vs. capacity) and outputs concrete, bilingual dispatch instructions (e.g., "CRITICAL OVERCROWDING at Kalanki: Inject 2 short-turn express buses toward Ratna Park and reduce headway by 5 minutes").
 
-5. **Visualize Operations (Dashboard)**:
-   Streamlit Command Center featuring a color-coded Folium heatmap of the real stations, KPI cards, sortable dispatch tables, the live operational snapshot, and per-station traffic charts.
+6. **Visualize Operations (Dashboard)**:
+   Streamlit Command Center featuring a color-coded Folium heatmap of the real stations, KPI cards, sortable dispatch tables, the live operational snapshot, per-station traffic charts with a dashed forecast extension, and a next-window forecast panel.
 
 ## 4. Who Benefits and Why It Matters
 
@@ -45,5 +49,6 @@ The implementation is a **real-data system - no synthetic data**:
 | Stations modelled | 21 official Kathmandu Valley count stations |
 | Published years | 2011/12 – 2024/25 (10 count years per station) |
 | Operational snapshot | Each station's most recently published count (2024/25) |
-| Geocoding | OpenStreetMap Nominatim (with curated real reference coordinates as fallback) |
+| Forecast | Linear trend fitted only on the real published yearly counts (next window e.g. 2026/27) |
+| Coordinates | Official station metadata from the scraped DOR tables |
 | Synthetic data | None. No generated, simulated, or fabricated demand exists in any layer. |

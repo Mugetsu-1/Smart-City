@@ -9,11 +9,8 @@ import plotly.graph_objects as go
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from src.optimize import generate_schedule_recommendations
-from src.data_feeds import (
-    load_transit_stops,
-    load_demand_feed,
-    CACHE_MAX_AGE_HOURS,
-)
+from src.forecast import forecast_next_window
+from src.data_feeds import load_transit_stops, load_demand_feed
 
 AUTO_REFRESH_MS = 60000
 KTM_TZ = "Asia/Katmandu"
@@ -77,24 +74,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-@st.cache_data(ttl=60)
-def load_stops_data():
-    return load_transit_stops()
-
-
-@st.cache_data(ttl=60)
-def load_demand_data():
-    return load_demand_feed()
-
-
-def refresh_dor_feed():
-    try:
-        load_demand_feed(force_refresh=True)
-        load_transit_stops(force_refresh=True)
-        return True
-    except Exception as exc:
-        st.sidebar.error(f"DOR refresh failed: {exc}")
-        return False
+@st.cache_resource(
+    show_spinner="Live scraping Department of Roads (DOR) traffic portal...",
+    ttl=3600,
+)
+def load_session_data():
+    stops_df = load_transit_stops(live=True)
+    demand_df = load_demand_feed(live=True)
+    return stops_df, demand_df
 
 
 # UI Header
@@ -104,37 +91,13 @@ st.markdown(
 )
 st.markdown(
     "<div class='sub-header'>Real Department of Roads (DOR) traffic counts "
-    "for Kathmandu Valley corridors, spatial congestion clustering, and "
-    "automated headway dispatch recommendations.</div>",
+    "for Kathmandu Valley corridors, live scraping of the official portal, "
+    "real-count trend forecasting of the next published count window, spatial "
+    "congestion clustering, and automated headway dispatch recommendations.</div>",
     unsafe_allow_html=True,
 )
 
-# Sidebar Control Panel
-st.sidebar.header("System Controls")
-
-st.sidebar.markdown(
-    "Data Source: <span class='status-connected'>DOR SSRN Traffic Portal (real)</span>",
-    unsafe_allow_html=True,
-)
-st.sidebar.markdown(
-    f"Snapshot refresh window: every {CACHE_MAX_AGE_HOURS} hours "
-    f"(dashboard auto-refresh: {AUTO_REFRESH_MS // 1000}s)",
-    unsafe_allow_html=True,
-)
-
-if st.sidebar.button("Refresh Data from DOR Portal Now"):
-    if refresh_dor_feed():
-        st.cache_data.clear()
-        st.sidebar.success("DOR data refreshed from the official portal!")
-    else:
-        st.sidebar.warning("Refresh failed - showing last cached real snapshot.")
-
-if st.sidebar.button("Clear Data Cache"):
-    st.cache_data.clear()
-    st.sidebar.success("Cache cleared.")
-
-stops_df = load_stops_data()
-demand_df = load_demand_data()
+stops_df, demand_df = load_session_data()
 
 if len(stops_df) == 0 or len(demand_df) == 0:
     st.error(
@@ -143,6 +106,41 @@ if len(stops_df) == 0 or len(demand_df) == 0:
         "real Kathmandu traffic snapshot, then relaunch this dashboard."
     )
     st.stop()
+
+is_live = (
+    "data_source" in demand_df.columns
+    and demand_df["data_source"].iloc[0] == "dor_portal_live"
+)
+fetched_at = (
+    demand_df["fetched_at"].iloc[0]
+    if "fetched_at" in demand_df.columns
+    else "n/a"
+)
+
+# Sidebar Control Panel
+st.sidebar.header("System Controls")
+
+if is_live:
+    st.sidebar.markdown(
+        "Data Source: <span class='status-connected'>LIVE - scraped from "
+        "DOR SSRN portal</span>",
+        unsafe_allow_html=True,
+    )
+else:
+    st.sidebar.markdown(
+        "Data Source: <span class='status-fallback'>OFFLINE - showing last "
+        "real snapshot</span>",
+        unsafe_allow_html=True,
+    )
+st.sidebar.markdown(
+    f"Fetched (Asia/Katmandu): {fetched_at}  \n"
+    f"Dashboard auto-refresh: {AUTO_REFRESH_MS // 1000}s (no re-scrape)",
+    unsafe_allow_html=True,
+)
+
+if st.sidebar.button("Scrape DOR Portal Now"):
+    load_session_data.clear()
+    st.rerun()
 
 available_routes = ["All Corridors"] + list(stops_df["route_id"].unique())
 selected_route = st.sidebar.selectbox("Filter Transit Corridor", available_routes)
@@ -191,17 +189,13 @@ st.write("---")
 
 st.subheader("Live Operational Snapshot")
 live_cols = st.columns(2)
-demand_source = (
-    demand_df["data_source"].iloc[0]
-    if len(demand_df) > 0 and "data_source" in demand_df.columns
-    else "unknown"
-)
 with live_cols[0]:
     st.markdown("**Current Kathmandu Time**  \n" + pd.Timestamp.now(tz=KTM_TZ).strftime("%Y-%m-%d %H:%M"))
 with live_cols[1]:
+    mode_badge = "LIVE scrape (today)" if is_live else "OFFLINE - last snapshot"
     st.markdown(
-        f"**Real Demand Feed**  \n{demand_source}  \n"
-        f"Latest published count year: {latest_year}"
+        f"**Real Demand Feed**  \n{mode_badge}  \n"
+        f"Fetched: {fetched_at}  \nLatest published count year: {latest_year}"
     )
 
 st.subheader("Corridor Dispatch Priorities")
@@ -347,6 +341,30 @@ for stop_name, series in station_years.groupby("stop_name"):
         line=dict(width=2),
     ))
 
+fore_df, next_window_label = forecast_next_window(demand_df)
+if selected_route != "All Corridors":
+    fore_df = fore_df[fore_df["route_id"] == selected_route]
+
+if len(fore_df) > 0:
+    for route_id, grp in fore_df.groupby("route_id"):
+        last_obs_ts = demand_df[
+            demand_df["route_id"] == route_id
+        ]["timestamp"].max()
+        last_total = float(
+            fore_df[fore_df["route_id"] == route_id]["latest_aadt_pcu"].sum()
+        )
+        next_total = float(
+            fore_df[fore_df["route_id"] == route_id]["forecast_aadt_pcu"].sum()
+        )
+        fig.add_trace(go.Scatter(
+            x=[last_obs_ts, grp["forecast_timestamp"].iloc[0]],
+            y=[last_total, next_total],
+            mode="lines+markers",
+            line=dict(dash="dash", width=3, color="#FF6B6B"),
+            marker=dict(symbol="diamond", size=10, color="#FF6B6B"),
+            name=f"{route_id} forecast ({next_window_label})",
+        ))
+
 fig.update_layout(
     title=f"Published Annual Average Daily Traffic (PCU) per Station - Corridor: {selected_route}",
     xaxis_title="Count Year",
@@ -358,6 +376,47 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig, width='stretch')
+
+st.write("---")
+
+st.subheader(f"Real-Count Demand Forecast - Next Published Window ({next_window_label})")
+if len(fore_df) > 0:
+    f1, f2, f3 = st.columns(3)
+    total_next = int(fore_df["forecast_aadt_pcu"].sum())
+    total_latest = int(fore_df["latest_aadt_pcu"].sum())
+    growth = (total_next - total_latest) / max(total_latest, 1) * 100
+    rising = int((fore_df["pct_change"] > 0).sum())
+
+    with f1:
+        st.metric(
+            f"Forecast System Demand ({next_window_label})",
+            f"{total_next:,} pcu/day",
+            f"{growth:+.1f}% vs latest",
+        )
+    with f2:
+        fastest = fore_df.sort_values("pct_change", ascending=False).iloc[0]
+        st.metric("Fastest-Growing Station", f"{fastest['pct_change']:+.1f}%",
+                  fastest["stop_name"])
+    with f3:
+        st.metric("Stations Forecast to Grow", f"{rising} of {len(fore_df)}")
+
+    forecast_view = fore_df[
+        ["stop_name", "route_id", "latest_aadt_pcu", "forecast_aadt_pcu",
+         "pct_change", "forecast_method", "n_observed_years"]
+    ].sort_values("pct_change", ascending=False).copy()
+    forecast_view.columns = [
+        "Station", "Corridor", f"Latest ({latest_year})",
+        f"Forecast ({next_window_label})", "Delta %", "Model", "Observed Years",
+    ]
+    st.dataframe(forecast_view, width='stretch', height=320)
+    st.caption(
+        "Trend model trained only on the real published yearly DOR counts above "
+        "(minimum 4 observed years per station; sparser stations are carried "
+        "forward). Sigma (uncertainty) is excluded from this view; the model is "
+        "honest about the real, sparse yearly cadence."
+    )
+else:
+    st.info("No forecast available for the selected corridor filter.")
 
 st.caption(
     f"Data: Department of Roads (DOR) - Strategic Road Network (SSRN) public traffic "

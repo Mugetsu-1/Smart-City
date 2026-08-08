@@ -22,7 +22,10 @@ if __name__ == "__main__":
     print("--- STEP 1: Fetching Real DOR Kathmandu Traffic Data ---")
     run_cmd(f"{python_exe} src/generate_data.py")
 
-    print("\n--- STEP 2: Testing Schedule Optimization & Hotspots ---")
+    print("\n--- STEP 2: Real-Count Demand Forecasting (next window) ---")
+    run_cmd(f"{python_exe} src/forecast.py")
+
+    print("\n--- STEP 3: Testing Schedule Optimization & Hotspots ---")
     run_cmd(f"{python_exe} src/test_optimize.py")
 
     print("\n=======================================================")

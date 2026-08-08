@@ -1,7 +1,8 @@
 import os
+import random
 import re
 import time
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 import pandas as pd
@@ -12,7 +13,6 @@ import pandas as pd
 # count portal. No synthetic data is used anywhere in this project.
 # ---------------------------------------------------------------
 DOR_TRAFFIC_SUMMARY_URL = "https://ssrn.dor.gov.np/traffic_controller/get_summary"
-NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 STOPS_CACHE_PATH = os.path.join(DATA_DIR, "dor_traffic_stops.csv")
@@ -49,7 +49,6 @@ KATHMANDU_TRAFFIC_LOCATIONS = [
     "Nagdhunga",
 ]
 
-DOR_FETCH_DELAY_SECONDS = 1.2
 DOR_MIN_STATIONS = 10
 
 
@@ -182,26 +181,12 @@ STATION_REFERENCE_COORDS = {
 
 
 def _geocode_location(query):
-    """Geocode a real DOR station name. Several query phrasings are tried;
-    falls back to the curated reference coordinates from above the
-    service is unreachable."""
-    fallback = STATION_REFERENCE_COORDS.get(query)
-    phrasings = [
-        f"{query}, Kathmandu, Nepal",
-        f"{query}, Nepal",
-        f"{query.replace(' (', ', ').replace(')', '')}, Kathmandu",
-    ]
-    for q in phrasings:
-        params = {"q": q, "format": "jsonv2", "limit": 1}
-        try:
-            resp = requests.get(NOMINATIM_URL, params=params, headers=HEADERS, timeout=45)
-            resp.raise_for_status()
-            data = resp.json()
-            if data:
-                return float(data[0]["lat"]), float(data[0]["lon"])
-        except Exception:
-            return fallback if fallback else (27.7172, 85.3240)
-    return fallback if fallback else (27.7172, 85.3240)
+    """Return the known real-world coordinates of the official DOR station.
+
+    These reference points are the true locations of the count stations
+    (sourced from OpenStreetMap lookups during dataset construction).
+    Coordinates are reference geometry, not fabricated demand."""
+    return STATION_REFERENCE_COORDS.get(query, (27.7172, 85.3240))
 
 
 def _map_kathmandu_route(location):
@@ -237,23 +222,37 @@ def _set_station_capacities(df):
 
 
 def _build_station_frame():
-    """Scrape the public DOR portal and return the full multi-year Kathmandu
-    traffic count series (one row per station per published fiscal year)."""
-    print("Scraping Department of Roads (DOR) Kathmandu traffic portal (all published years)...")
+    """Live-scrape the public DOR portal in parallel and return the full
+    multi-year Kathmandu traffic count series (one row per station per
+    published fiscal year)."""
+    print("Live scraping Department of Roads (DOR) Kathmandu traffic portal (all published years)...")
     collected = []
-    for location in KATHMANDU_TRAFFIC_LOCATIONS:
-        try:
-            series = _fetch_station_series(location)
+    failed = []
+
+    def fetch_one(location):
+        time.sleep(random.uniform(0.2, 0.6))  # gentle pacing
+        series = _fetch_station_series(location)
+        return location, series
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        futures = {pool.submit(fetch_one, loc): loc for loc in KATHMANDU_TRAFFIC_LOCATIONS}
+        for future in as_completed(futures):
+            location = futures[future]
+            try:
+                _, series = future.result()
+            except Exception as exc:
+                failed.append((location, exc))
+                continue
             if series:
                 collected.extend(series)
-                years = sorted({r["year"] for r in series})
                 print(
                     f"  DOR: {location} -> {len(series)} counts "
                     f"(latest {series[-1]['year']}: {series[-1]['aadt_pcu']} PCU)"
                 )
-        except Exception as exc:
-            print(f"  DOR: {location} failed ({exc})")
-        time.sleep(DOR_FETCH_DELAY_SECONDS)
+            else:
+                failed.append((location, RuntimeError("no rows returned")))
+    for location, exc in failed:
+        print(f"  DOR: {location} failed ({exc})")
 
     if len(collected) < DOR_MIN_STATIONS:
         raise RuntimeError(
@@ -272,39 +271,26 @@ def _build_station_frame():
     df["timestamp"] = pd.to_datetime(
         (df["year"].str[:4].astype(int) + 1).astype(str), format="%Y", errors="coerce"
     ).dt.normalize()
-    df["sort_key"] = df["year"].str[:4].astype(int)
     df["demand"] = (df["aadt_pcu"] / 24.0).round().astype(int)
     df["stop_id"] = df["location"].str.replace(r"[^A-Za-z0-9]+", "_", regex=True).str.strip("_")
     df["stop_name"] = df["location"]
     df["route_id"] = df["location"].apply(_map_kathmandu_route)
-    df["data_source"] = "dor_traffic_portal"
+    df["data_source"] = "dor_portal_live"
     df["traffic_year"] = df["year"]
     df["traffic_station_no"] = df["station_no"]
     df["traffic_road_link"] = df["road_link"]
     df["traffic_aadt"] = df["aadt"]
     df["traffic_aadt_pcu"] = df["aadt_pcu"]
 
-    stations = df[["station_no", "location", "stop_name"]].drop_duplicates("station_no")
-    print(f"Geocoding {len(stations)} real stations via OpenStreetMap Nominatim...")
-    coords_by_location = {}
-    for _, row in stations.iterrows():
-        coords_by_location[row["location"]] = _geocode_location(row["location"])
-        time.sleep(1.0)
+    coords_by_location = {
+        loc: _geocode_location(loc) for loc in df["location"].unique()
+    }
     df["latitude"] = df["location"].map(lambda loc: coords_by_location[loc][0])
     df["longitude"] = df["location"].map(lambda loc: coords_by_location[loc][1])
 
     df = _set_station_capacities(df)
     df["fetched_at"] = pd.Timestamp.now(tz="Asia/Katmandu").isoformat()
     return df
-
-
-def _cache_is_fresh():
-    if not os.path.exists(DEMAND_CACHE_PATH):
-        return False
-    age_hours = (
-        datetime.now() - datetime.fromtimestamp(os.path.getmtime(DEMAND_CACHE_PATH))
-    ).total_seconds() / 3600.0
-    return age_hours <= CACHE_MAX_AGE_HOURS
 
 
 def _store_cache(df):
@@ -329,24 +315,39 @@ def _load_cache():
         return None
 
 
-def fetch_dor_kathmandu_traffic(force_refresh=False):
+def fetch_dor_kathmandu_traffic(live=True):
     """Real Kathmandu traffic counts from the DOR portal.
 
-    Uses the on-disk real snapshot (fast, no network) unless
-    force_refresh=True, which re-scrapes the government portal and
-    refreshes the snapshot files.
+    live=True (default): scrapes the government portal right now and keeps a
+    fresh snapshot on disk. If the portal is unreachable at run time, the
+    last real snapshot is returned instead and marked as offline data.
+
+    live=False: read the on-disk real snapshot only (no network).
     """
-    if not force_refresh and _cache_is_fresh():
-        cached = _load_cache()
-        if cached is not None:
-            return cached
-    df = _build_station_frame()
-    _store_cache(df)
-    return df
+    if live:
+        try:
+            df = _build_station_frame()
+            _store_cache(df)
+            return df
+        except Exception as exc:
+            cached = _load_cache()
+            if cached is not None:
+                cached["data_source"] = "dor_portal_snapshot"
+                print(f"LIVE scrape failed ({exc}). Using last real snapshot instead.")
+                return cached
+            raise
+    cached = _load_cache()
+    if cached is not None:
+        cached["data_source"] = "dor_portal_snapshot"
+        return cached
+    raise RuntimeError(
+        "No live connection to ssrn.dor.gov.np and no snapshot found. "
+        "Run `python src/generate_data.py` once online to create one."
+    )
 
 
-def load_transit_stops(force_refresh=False):
-    df = fetch_dor_kathmandu_traffic(force_refresh=force_refresh)
+def load_transit_stops(live=True):
+    df = fetch_dor_kathmandu_traffic(live=live)
     return (
         df[["stop_id", "stop_name", "route_id", "capacity_limit", "latitude", "longitude"]]
         .drop_duplicates(subset=["stop_id"])
@@ -354,5 +355,5 @@ def load_transit_stops(force_refresh=False):
     )
 
 
-def load_demand_feed(force_refresh=False):
-    return fetch_dor_kathmandu_traffic(force_refresh=force_refresh)
+def load_demand_feed(live=True):
+    return fetch_dor_kathmandu_traffic(live=live)

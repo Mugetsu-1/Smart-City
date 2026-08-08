@@ -5,24 +5,26 @@ The **Smart City: Dynamic Transit Scheduling and Route Optimization** system is 
 
 ```mermaid
 graph TD
-    A["Department of Roads SSRN Portal (ssrn.dor.gov.np)"] -->|Scraped per-station AADT Tables| B["Real Data Layer (src/data_feeds.py)"]
-    B -->|Geocode + CSV Cache| C["Transit Snapshot (data/dor_traffic_*)"]
-    C -->|Optional Mirror| D["PostgreSQL + PostGIS (same real data)"]
-    C --> E["Spatial Hotspot Engine (K-Means Clustering)"]
-    E -->|Pressure Ratio Calculation| F["Decision Engine (Dispatch Rules)"]
-    F -->|Automated Instructions| G["Streamlit Control Center (app/app.py)"]
+    A["Department of Roads SSRN Portal (ssrn.dor.gov.np)"] -->|Live parallel scrape per-station AADT Tables| B["Real Data Layer (src/data_feeds.py)"]
+    B -->|write-through| C["CSV Snapshots (data/dor_traffic_*) - offline fallback"]
+    B --> D["Forecast Engine (src/forecast.py) - trend on real yearly counts"]
+    C -->|Optional Mirror| E["PostgreSQL + PostGIS (same real data)"]
+    B --> F["Optimization Engine (src/optimize.py) - K-Means + dispatch rules"]
+    F -->|Pressure ratios, hotspots, headway orders| G["Streamlit Control Center (app/app.py)"]
+    D -->|Next-window prediction| G
+    C -.->|portal unreachable fallback| B
 ```
 
 ## 2. Architectural Layers
 
 ### 2.1 Real Data Layer (`src/data_feeds.py`, `src/generate_data.py`)
 - **Real Primary Source**: Department of Roads (DOR) SSRN public traffic portal — `https://ssrn.dor.gov.np/traffic_controller`.
-- **Ingestion**: For each of the 21 official Kathmandu Valley count stations, the AADT summary page is fetched and parsed:
+- **Live ingestion (default)**: On startup (app or `run.py`), all 21 official Kathmandu Valley count stations are scraped **in parallel** (6 workers; every run is a fresh real scrape, no stale-cache gating). Each station's summary page is parsed into:
   - Station No, Road Link, Location
   - AADT (total, excluding MC & rickshaws)
   - AADT in PCUs (total, excluding MC & rickshaws), Year
-- **Caching**: Real snapshots are cached as CSVs (`data/dor_traffic_demand.csv`, `data/dor_traffic_stops.csv`) to keep the dashboard fast; a forced scrape re-hits the official portal.
-- **Geocoding**: Real station names are geocoded with OpenStreetMap Nominatim, with curated real reference coordinates for each station used when the service is unreachable.
+- **Offline fallback**: every successful scrape writes real CSV snapshots (`data/dor_traffic_demand.csv`, `data/dor_traffic_stops.csv`). If the portal is unreachable, the feeds return the last snapshot and tag rows `data_source = dor_portal_snapshot` so the dashboard shows an explicit OFFLINE badge.
+- **Forecasting (`src/forecast.py`)**: fits a per-station linear trend (year → aadt_pcu, scikit-learn) on the ≥4 real published yearly counts and projects the **next count window** (e.g. 2024/25 → 2026/27); stations with fewer published years are carried forward. Uncertainty (residual sigma) is computed per station.
 - **PostgreSQL/PostGIS Mirror (optional)**: `sql/schema.sql` defines a PostGIS-schema (`bus_stops` + `dor_traffic_demand`) populated from the mirrored real rows.
 
 ### 2.2 Spatial Clustering & Dispatch Optimization Layer (`src/optimize.py`)
@@ -35,15 +37,16 @@ graph TD
   - `BLUE`: Underutilized — extend headway or re-route fleet.
 
 ### 2.3 Visualization & Control Layer (`app/app.py`)
-- **Streamlit Interface**: Dark high-tech command dashboard.
-- **Folium Map**: Real Kathmandu stations rendered with color-coded congestion markers and hotspot cluster polylines.
-- **Analytics**: System-wide KPI cards, sortable dispatch recommendation table, live operational snapshot, and real observed traffic charts per station.
+- **Streamlit Interface**: dark high-tech command dashboard; live-scrapes the portal once per process (cached `st.cache_resource`, 60s page auto-refresh reads memory) with a manual *Scrape DOR Portal Now* action.
+- **Folium Map**: real Kathmandu stations rendered with color-coded congestion markers and hotspot cluster polylines.
+- **Analytics**: system-wide KPI cards, sortable dispatch recommendation table, live operational snapshot (LIVE / OFFLINE badge + fetched timestamp), per-station traffic charts with a **dashed forecast extension**, and a next-window forecast panel (total growth, fastest-growing station, station table with Delta % and model type).
 
 ## 3. Data Provenance
 | Field | Source |
 |-------|--------|
-| Traffic counts | Nepal DOR SSRN portal (official) |
-| Coordinates | OpenStreetMap Nominatim + curated references |
-| Dataset size | 21 stations × AADT figures |
+| Traffic counts | Nepal DOR SSRN portal (official), scraped live at each run |
+| Forecast | Linear trend trained only on the real published yearly counts |
+| Coordinates | Official station metadata in the scraped tables |
+| Dataset size | 21 stations × AADT figures × all published years |
 | Synthetic data | None |
-| Refresh | On-demand re-scrape from the official portal |
+| Refresh | On-demand live scrape from the official portal; dashboard fallback to last real snapshot (explicit OFFLINE badge) |
